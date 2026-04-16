@@ -10,11 +10,15 @@ import json
 import logging
 from pathlib import Path
 
+import dotenv
+
 from src.fetch_podcast import fetch_latest_episode, download_audio
 from src.transcribe import transcribe_audio
 from src.analyze import analyze_transcript
 from src.render import render_email_html
 from src.notify import send_gmail, send_line_message
+
+dotenv.load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,
@@ -76,11 +80,11 @@ def main():
         sys.exit(1)
     log.info(f"📝 轉錄完成，共 {len(transcript)} 字")
 
-    # ── 6. Claude 分析 ────────────────────────────────────────────
-    log.info("🤖 Claude 分析中...")
+    # ── 6. Gemini 分析 ────────────────────────────────────────────
+    log.info("🤖 Gemini 分析中...")
     digest = analyze_transcript(transcript, episode)
     if not digest:
-        log.error("Claude 分析失敗，結束")
+        log.error("Gemini 分析失敗，結束")
         sys.exit(1)
 
     # ── 7. 渲染 HTML ──────────────────────────────────────────────

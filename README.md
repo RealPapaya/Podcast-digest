@@ -59,7 +59,29 @@ LINE Notify 已於 2025/4 停服，需改用 LINE Messaging API：
 
 ---
 
-### 步驟 3：設定 GitHub Secrets
+### 步驟 3：本地環境設定（選用）
+
+如果你想在本機測試，而非使用 GitHub Actions：
+
+1. 安裝依賴：
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. 建立 `.env` 檔案，填入你的 API Keys：
+   ```bash
+   cp .env.example .env  # 或手動建立
+   # 編輯 .env 檔案，填入實際的金鑰
+   ```
+
+3. 執行腳本：
+   ```bash
+   python main.py
+   ```
+
+---
+
+### 步驟 4：設定 GitHub Secrets
 
 在你 Fork 的 Repo → Settings → Secrets and variables → Actions → **New repository secret**
 
@@ -89,7 +111,7 @@ Repo → Actions → 股癌 AI 每日投資筆記 → **Run workflow**
 觀察 log，確認：
 - 成功下載音檔
 - Whisper 轉錄完成（約 30–60 分鐘）
-- Claude 分析完成
+- Gemini 分析完成
 - Email 和 LINE 收到筆記
 
 之後每天 **台灣時間早上 10:00** 自動執行。
