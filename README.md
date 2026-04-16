@@ -28,9 +28,9 @@
 
 ### 步驟 2：取得 API Keys
 
-#### 🔑 Anthropic API Key
-1. 前往 https://console.anthropic.com
-2. 左側選單 → API Keys → Create Key
+#### 🔑 Google Gemini API Key
+1. 前往 https://aistudio.google.com/app/apikey
+2. 建立新的 API Key
 3. 複製金鑰
 
 #### 📧 Gmail 應用程式密碼
@@ -65,7 +65,7 @@ LINE Notify 已於 2025/4 停服，需改用 LINE Messaging API：
 
 | Secret 名稱 | 說明 | 範例 |
 |-------------|------|------|
-| `ANTHROPIC_API_KEY` | Anthropic API 金鑰 | `sk-ant-api03-...` |
+| `GOOGLE_API_KEY` | Google Gemini API 金鑰 | `AIzaSyD...` |
 | `GMAIL_USER` | 你的 Gmail 帳號 | `yourname@gmail.com` |
 | `GMAIL_APP_PASSWORD` | Gmail 應用程式密碼 | `abcd efgh ijkl mnop` |
 | `RECIPIENT_EMAIL` | 收件 Email（可填自己） | `yourname@gmail.com` |
@@ -108,7 +108,7 @@ Repo → Actions → 股癌 AI 每日投資筆記 → **Run workflow**
 
 ### Q：要付費嗎？
 - **GitHub Actions**：免費（每月 2000 分鐘）。每次執行約 30–60 分鐘，一個月 30 集約需 900–1800 分鐘。
-- **Anthropic API**：每次分析約 $0.05–0.15 USD，一個月約 $2–5 USD。
+- **Google Gemini API**：每次分析約 $0.001–0.005 USD（使用 gemini-1.5-flash），每月約 $0.03–0.15 USD。
 - **LINE Bot**：免費（每月 200 則推播訊息）。
 - **Gmail**：免費。
 
@@ -140,7 +140,7 @@ gooaye-digest/
 ├── src/
 │   ├── fetch_podcast.py       # RSS 抓取 + 音檔下載
 │   ├── transcribe.py          # faster-whisper 轉錄
-│   ├── analyze.py             # Claude API 結構化分析
+│   ├── analyze.py             # Google Gemini API 結構化分析
 │   ├── render.py              # HTML Email 渲染
 │   └── notify.py              # Gmail + LINE Bot 發送
 ├── main.py                    # 主程式入口

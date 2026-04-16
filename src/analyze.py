@@ -1,6 +1,6 @@
 """
 analyze.py
-將逐字稿送入 Claude，產出結構化 JSON 筆記
+將逐字稿送入 Gemini，產出結構化 JSON 筆記
 """
 
 import os
@@ -8,12 +8,12 @@ import json
 import logging
 from typing import Optional
 
-import anthropic
+import google.generativeai as genai
 
 log = logging.getLogger(__name__)
 
-# 逐字稿太長時截斷（Claude 上下文限制保護）
-MAX_TRANSCRIPT_CHARS = 80_000
+# 逐字稿太長時截斷（Gemini 上下文限制保護）
+MAX_TRANSCRIPT_CHARS = 1_000_000  # Gemini 支援較長上下文
 
 SYSTEM_PROMPT = """你是專業的台灣投資 Podcast 內容分析師，專門整理「股癌」(Gooaye) Podcast 的投資觀點。
 
@@ -78,11 +78,11 @@ JSON 格式：
 
 def analyze_transcript(transcript: str, episode: dict) -> Optional[dict]:
     """
-    呼叫 Claude API 分析逐字稿，回傳結構化 dict
+    呼叫 Gemini API 分析逐字稿，回傳結構化 dict
     """
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    api_key = os.environ.get("GOOGLE_API_KEY")
     if not api_key:
-        log.error("缺少環境變數：ANTHROPIC_API_KEY")
+        log.error("缺少環境變數：GOOGLE_API_KEY")
         return None
 
     # 截斷過長的逐字稿
@@ -90,9 +90,12 @@ def analyze_transcript(transcript: str, episode: dict) -> Optional[dict]:
         log.warning(f"逐字稿過長（{len(transcript)} 字），截斷至 {MAX_TRANSCRIPT_CHARS} 字")
         transcript = transcript[:MAX_TRANSCRIPT_CHARS] + "\n\n[以上為前段內容，後續略]"
 
-    client = anthropic.Anthropic(api_key=api_key)
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-1.5-flash')
 
-    user_message = f"""以下是股癌 Podcast {episode['ep_number']}（{episode['date']}）的完整逐字稿，請按格式輸出 JSON 筆記：
+    user_message = f"""{SYSTEM_PROMPT}
+
+以下是股癌 Podcast {episode['ep_number']}（{episode['date']}）的完整逐字稿，請按格式輸出 JSON 筆記：
 
 ---逐字稿開始---
 {transcript}
@@ -101,16 +104,17 @@ def analyze_transcript(transcript: str, episode: dict) -> Optional[dict]:
 請輸出 JSON："""
 
     try:
-        log.info("送出 Claude API 請求...")
-        message = client.messages.create(
-            model="claude-opus-4-5",
-            max_tokens=4096,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_message}],
+        log.info("送出 Gemini API 請求...")
+        response = model.generate_content(
+            user_message,
+            generation_config=genai.types.GenerationConfig(
+                temperature=0.1,  # 低溫度以確保一致輸出
+                max_output_tokens=4096,
+            )
         )
 
-        raw = message.content[0].text.strip()
-        log.info(f"Claude 回應長度：{len(raw)} 字")
+        raw = response.text.strip()
+        log.info(f"Gemini 回應長度：{len(raw)} 字")
 
         # 清理可能的 markdown 包裝
         if raw.startswith("```"):
@@ -121,7 +125,7 @@ def analyze_transcript(transcript: str, episode: dict) -> Optional[dict]:
 
         digest = json.loads(raw)
 
-        # 補齊 episode 資訊（如果 Claude 沒填）
+        # 補齊 episode 資訊（如果 Gemini 沒填）
         digest.setdefault("ep_number", episode.get("ep_number", ""))
         digest.setdefault("date", episode.get("date", ""))
 
@@ -136,9 +140,6 @@ def analyze_transcript(transcript: str, episode: dict) -> Optional[dict]:
         log.error(f"JSON 解析失敗：{e}")
         log.error(f"原始回應：{raw[:500]}")
         return None
-    except anthropic.APIError as e:
-        log.error(f"Claude API 錯誤：{e}")
-        return None
     except Exception as e:
-        log.error(f"未知錯誤：{e}")
+        log.error(f"Gemini API 錯誤：{e}")
         return None
