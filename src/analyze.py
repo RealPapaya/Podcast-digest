@@ -8,7 +8,7 @@ import json
 import logging
 from typing import Optional
 
-import google.generativeai as genai
+from google import genai
 
 log = logging.getLogger(__name__)
 
@@ -90,8 +90,7 @@ def analyze_transcript(transcript: str, episode: dict) -> Optional[dict]:
         log.warning(f"逐字稿過長（{len(transcript)} 字），截斷至 {MAX_TRANSCRIPT_CHARS} 字")
         transcript = transcript[:MAX_TRANSCRIPT_CHARS] + "\n\n[以上為前段內容，後續略]"
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    client = genai.Client(api_key=api_key)
 
     user_message = f"""{SYSTEM_PROMPT}
 
@@ -105,12 +104,13 @@ def analyze_transcript(transcript: str, episode: dict) -> Optional[dict]:
 
     try:
         log.info("送出 Gemini API 請求...")
-        response = model.generate_content(
-            user_message,
-            generation_config=genai.types.GenerationConfig(
-                temperature=0.1,  # 低溫度以確保一致輸出
-                max_output_tokens=4096,
-            )
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=user_message,
+            config={
+                "temperature": 0.1,
+                "max_output_tokens": 4096,
+            }
         )
 
         raw = response.text.strip()
