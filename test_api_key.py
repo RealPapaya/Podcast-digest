@@ -38,7 +38,7 @@ def test_google_api():
         # 簡單的測試請求
         log.info("📡 發送測試請求到 Gemini...")
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-2.0-flash",
             contents="簡單測試：回答 '成功' 就好"
         )
 

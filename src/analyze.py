@@ -105,7 +105,7 @@ def analyze_transcript(transcript: str, episode: dict) -> Optional[dict]:
     try:
         log.info("送出 Gemini API 請求...")
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-2.0-flash",
             contents=user_message,
             config={
                 "temperature": 0.1,
