@@ -96,7 +96,7 @@ MOCK_EPISODE = {
 
 def step_analyze() -> Optional[dict]:
     log.info("🤖 測試 Gemini 分析...")
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
     from src.analyze import analyze_transcript
 
     digest = analyze_transcript(MOCK_TRANSCRIPT, MOCK_EPISODE)
