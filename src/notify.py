@@ -263,7 +263,7 @@ def send_line_message(digest: dict) -> bool:
         log.warning("未設定 LINE 環境變數，略過 LINE 發送")
         return False
 
-        flex_msg = _build_line_flex(digest)
+    flex_msg = _build_line_flex(digest)
 
     payload = {
         "to": user_id,

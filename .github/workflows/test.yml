@@ -25,23 +25,23 @@ jobs:
       - name: 🤖 測試 Gemini 分析
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-        run: python test_pipeline.py --step analyze
+        run: python tests/test_pipeline.py --step analyze
 
       - name: 🎨 測試 HTML 渲染
-        run: python test_pipeline.py --step render --use-cached
+        run: python tests/test_pipeline.py --step render --use-cached
 
       - name: 📧 測試 Email 發送
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
-        run: python test_pipeline.py --step email --use-cached
+        run: python tests/test_pipeline.py --step email --use-cached
 
       - name: 📱 測試 LINE 發送
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
-        run: python test_pipeline.py --step line --use-cached
+        run: python tests/test_pipeline.py --step line --use-cached
 
       - name: 📄 上傳 HTML 預覽
         uses: actions/upload-artifact@v4
