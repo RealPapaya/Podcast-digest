@@ -105,15 +105,16 @@ def _build_line_flex(digest: dict) -> dict:
     stance = market.get("stance", "中性")
     stocks = digest.get("stocks", [])
     news = digest.get("news", [])
+    qa_list = digest.get("qa", [])
 
     stance_color = {"看多": "#22c55e", "看空": "#ef4444", "觀望": "#f59e0b", "中性": "#6b7280"}.get(
         stance, "#6b7280"
     )
     stance_emoji = {"看多": "🟢", "看空": "🔴", "觀望": "🟡", "中性": "⚪"}.get(stance, "⚪")
 
-    # 個股清單（最多 5 檔）
+        # 個股清單（最多 15 檔）
     stock_rows = []
-    for s in stocks[:5]:
+    for s in stocks[:15]:
         s_stance = s.get("stance", "觀望")
         s_color = {"看多": "#22c55e", "看空": "#ef4444", "觀望": "#f59e0b"}.get(s_stance, "#6b7280")
         stock_rows.append({
@@ -140,9 +141,9 @@ def _build_line_flex(digest: dict) -> dict:
             "paddingTop": "4px",
         })
 
-    # 新聞標題（最多 3 條）
+            # 新聞標題（最多 8 條）
     news_items = []
-    for n in news[:3]:
+    for n in news[:8]:
         news_items.append({
             "type": "text",
             "text": f"• {n.get('title','')}",
@@ -150,6 +151,50 @@ def _build_line_flex(digest: dict) -> dict:
             "color": "#374151",
             "wrap": True,
             "margin": "sm",
+        })
+
+    # Q&A 區塊（最多 5 個）
+    qa_items = []
+    for qa in qa_list[:5]:
+        qa_title = qa.get("title", "")
+        qa_question = qa.get("question", "")
+        # 只顯示第一個 point 的內容（節省空間）
+        points = qa.get("points", [])
+        first_point = points[0].get("content", "")[:60] + "..." if points else ""
+        
+        qa_items.append({
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#f0f0ff",
+            "cornerRadius": "8px",
+            "paddingAll": "10px",
+            "margin": "sm",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": f"💡 {qa_title}",
+                    "size": "sm",
+                    "weight": "bold",
+                    "color": "#4f46e5",
+                    "wrap": True,
+                },
+                {
+                    "type": "text",
+                    "text": f"Q: {qa_question}",
+                    "size": "xs",
+                    "color": "#6b7280",
+                    "wrap": True,
+                    "margin": "sm",
+                },
+                {
+                    "type": "text",
+                    "text": first_point,
+                    "size": "xs",
+                    "color": "#374151",
+                    "wrap": True,
+                    "margin": "xs",
+                } if first_point else {"type": "filler"},
+            ],
         })
 
     flex_message = {
@@ -234,7 +279,10 @@ def _build_line_flex(digest: dict) -> dict:
                         "color": "#111827",
                         "margin": "lg",
                     },
-                    *news_items,
+                                        *news_items,
+                    # Q&A 區塊
+                    *([{"type": "separator", "margin": "lg", "color": "#e5e7eb"},
+                       {"type": "text", "text": "💡 Q&A 投資心法", "size": "md", "weight": "bold", "color": "#111827", "margin": "lg"}] + qa_items if qa_items else []),
                     # 底部說明
                     {
                         "type": "text",

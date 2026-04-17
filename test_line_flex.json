@@ -1,0 +1,308 @@
+{
+  "type": "flex",
+  "altText": "股癌 EP653 投資筆記 🟢 2026-04-15",
+  "contents": {
+    "type": "bubble",
+    "size": "giga",
+    "header": {
+      "type": "box",
+      "layout": "vertical",
+      "backgroundColor": "#111827",
+      "paddingAll": "20px",
+      "contents": [
+        {
+          "type": "text",
+          "text": "🎙️ 股癌 EP653",
+          "color": "#ffffff",
+          "size": "xl",
+          "weight": "bold"
+        },
+        {
+          "type": "text",
+          "text": "AI 投資筆記 · 2026-04-15",
+          "color": "#9ca3af",
+          "size": "sm",
+          "margin": "sm"
+        }
+      ]
+    },
+    "body": {
+      "type": "box",
+      "layout": "vertical",
+      "paddingAll": "20px",
+      "contents": [
+        {
+          "type": "box",
+          "layout": "vertical",
+          "backgroundColor": "#f9fafb",
+          "cornerRadius": "8px",
+          "paddingAll": "12px",
+          "margin": "none",
+          "contents": [
+            {
+              "type": "text",
+              "text": "大盤觀點 🟢 看多",
+              "size": "md",
+              "weight": "bold",
+              "color": "#22c55e"
+            },
+            {
+              "type": "text",
+              "text": "美股從之前的低點大幅反彈，台股也跟著各路標股持續向前衝，市場走勢極佳。",
+              "size": "sm",
+              "color": "#374151",
+              "wrap": true,
+              "margin": "sm"
+            }
+          ]
+        },
+        {
+          "type": "separator",
+          "margin": "lg",
+          "color": "#e5e7eb"
+        },
+        {
+          "type": "text",
+          "text": "📊 個股觀點",
+          "size": "md",
+          "weight": "bold",
+          "color": "#111827",
+          "margin": "lg"
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "台積電 (2330) ",
+              "size": "sm",
+              "color": "#111827",
+              "flex": 3
+            },
+            {
+              "type": "text",
+              "text": "看多",
+              "size": "sm",
+              "color": "#22c55e",
+              "flex": 1,
+              "align": "end",
+              "weight": "bold"
+            }
+          ],
+          "paddingTop": "4px"
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "聯發科 (2454) ",
+              "size": "sm",
+              "color": "#111827",
+              "flex": 3
+            },
+            {
+              "type": "text",
+              "text": "看多",
+              "size": "sm",
+              "color": "#22c55e",
+              "flex": 1,
+              "align": "end",
+              "weight": "bold"
+            }
+          ],
+          "paddingTop": "4px"
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "Marvell (MRVL) ",
+              "size": "sm",
+              "color": "#111827",
+              "flex": 3
+            },
+            {
+              "type": "text",
+              "text": "觀望",
+              "size": "sm",
+              "color": "#f59e0b",
+              "flex": 1,
+              "align": "end",
+              "weight": "bold"
+            }
+          ],
+          "paddingTop": "4px"
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "國巨 (2327) ",
+              "size": "sm",
+              "color": "#111827",
+              "flex": 3
+            },
+            {
+              "type": "text",
+              "text": "觀望",
+              "size": "sm",
+              "color": "#f59e0b",
+              "flex": 1,
+              "align": "end",
+              "weight": "bold"
+            }
+          ],
+          "paddingTop": "4px"
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "啟基 (6285) ",
+              "size": "sm",
+              "color": "#111827",
+              "flex": 3
+            },
+            {
+              "type": "text",
+              "text": "看多",
+              "size": "sm",
+              "color": "#22c55e",
+              "flex": 1,
+              "align": "end",
+              "weight": "bold"
+            }
+          ],
+          "paddingTop": "4px"
+        },
+        {
+          "type": "separator",
+          "margin": "lg",
+          "color": "#e5e7eb"
+        },
+        {
+          "type": "text",
+          "text": "📰 今日新聞",
+          "size": "md",
+          "weight": "bold",
+          "color": "#111827",
+          "margin": "lg"
+        },
+        {
+          "type": "text",
+          "text": "• 被動元件全面漲價",
+          "size": "sm",
+          "color": "#374151",
+          "wrap": true,
+          "margin": "sm"
+        },
+        {
+          "type": "text",
+          "text": "• 聯發科切入Google TPU",
+          "size": "sm",
+          "color": "#374151",
+          "wrap": true,
+          "margin": "sm"
+        },
+        {
+          "type": "separator",
+          "margin": "lg",
+          "color": "#e5e7eb"
+        },
+        {
+          "type": "text",
+          "text": "💡 Q&A 投資心法",
+          "size": "md",
+          "weight": "bold",
+          "color": "#111827",
+          "margin": "lg"
+        },
+        {
+          "type": "box",
+          "layout": "vertical",
+          "backgroundColor": "#f0f0ff",
+          "cornerRadius": "8px",
+          "paddingAll": "10px",
+          "margin": "sm",
+          "contents": [
+            {
+              "type": "text",
+              "text": "💡 美股持股策略",
+              "size": "sm",
+              "weight": "bold",
+              "color": "#4f46e5",
+              "wrap": true
+            },
+            {
+              "type": "text",
+              "text": "Q: 美股前五大持股是什麼？",
+              "size": "xs",
+              "color": "#6b7280",
+              "wrap": true,
+              "margin": "sm"
+            },
+            {
+              "type": "text",
+              "text": "INTC、ARM、AMD (CPU類)，MRVL、LITE、COHR (網通光通訊)，NET (Cloudflare)，...",
+              "size": "xs",
+              "color": "#374151",
+              "wrap": true,
+              "margin": "xs"
+            }
+          ]
+        },
+        {
+          "type": "box",
+          "layout": "vertical",
+          "backgroundColor": "#f0f0ff",
+          "cornerRadius": "8px",
+          "paddingAll": "10px",
+          "margin": "sm",
+          "contents": [
+            {
+              "type": "text",
+              "text": "💡 趨勢判斷方法",
+              "size": "sm",
+              "weight": "bold",
+              "color": "#4f46e5",
+              "wrap": true
+            },
+            {
+              "type": "text",
+              "text": "Q: 判斷趨勢是看幾天的日K？",
+              "size": "xs",
+              "color": "#6b7280",
+              "wrap": true,
+              "margin": "sm"
+            },
+            {
+              "type": "text",
+              "text": "不要只看3到5天的短線震盪，應該結合日線與周線觀察...",
+              "size": "xs",
+              "color": "#374151",
+              "wrap": true,
+              "margin": "xs"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "投資組合終端・僅供參考不構成投資建議",
+          "size": "xxs",
+          "color": "#9ca3af",
+          "margin": "xl",
+          "align": "center"
+        }
+      ]
+    }
+  }
+}

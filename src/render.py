@@ -134,14 +134,15 @@ def render_email_html(digest: dict) -> str:
             <div style="margin-top:14px;padding:12px 16px;background:#fefce8;border-radius:8px;">
               <span style="font-size:18px;margin-right:8px;">💡</span>
               <span style="font-size:13px;color:#92400e;font-style:italic;">{quote}</span>
-            </div>
+                        </div>
             """
         src = qa.get("source_time", "")
+        src_badge = f"<span style='font-size:11px;color:#9ca3af;background:#f3f4f6;padding:3px 8px;border-radius:12px;'>⏱️ {src}分</span>" if src else ""
         qa_html += f"""
         <div style="border:1px solid #e5e7eb;border-radius:10px;padding:18px 20px;margin-bottom:14px;background:#fff;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <div style="font-size:15px;font-weight:700;color:#111827;flex:1;">{qa.get('title','')}</div>
-            {"<div style='width:30px;height:30px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#6b7280;flex-shrink:0;'>" + src + "</div>" if src else ""}
+            {src_badge}
           </div>
           <div style="background:#f0f0ff;border-left:3px solid #6366f1;padding:10px 14px;border-radius:0 6px 6px 0;margin-bottom:14px;">
             <span style="font-weight:600;color:#4f46e5;">Q：</span>
