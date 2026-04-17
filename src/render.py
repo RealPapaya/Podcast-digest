@@ -46,65 +46,105 @@ def _badge(text: str, color: str, bg: str) -> str:
 
 def _render_stock_card(stock: dict) -> str:
     """
-    Render a single stock card with market data
+    Render a single stock card with market data (matching reference image format)
     """
     stance = stock.get("stance", "觀望")
     risk = stock.get("risk", "中")
     s_cfg = STANCE_CONFIG.get(stance, STANCE_CONFIG["觀望"])
-    r_cfg = RISK_CONFIG.get(risk, RISK_CONFIG["中"])
     src = stock.get("source_time", "")
 
     ticker = stock.get("ticker", "")
     exchange = stock.get("exchange", "")
     sector = stock.get("sector", "")
+    name = stock.get('name', '')
     
-    # 美股與產業概述使用不同顏色
+    # 右上角標籤
     if exchange == "美股":
-        label_style = "background:#ede9fe;color:#7c3aed;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;"
-        label = f"<span style='{label_style}'>🇺🇸 美股 {sector}</span>" if sector else f"<span style='{label_style}'>🇺🇸 美股</span>"
-    elif not ticker and sector:  # 產業概述（沒有ticker）
-        label_style = "background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;"
-        label = f"<span style='{label_style}'>🏭 {sector}產業</span>"
+        label = f"<span style='font-size:12px;color:#9ca3af;'>🇺🇸 美股{sector}</span>"
+    elif not ticker and sector:  # 產業概述
+        label = f"<span style='font-size:12px;color:#9ca3af;'>🏭 {sector}產業</span>"
     else:
-        label_style = "font-size:13px;color:#6b7280;"
-        label = f"<span style='{label_style}'>{exchange} {sector}</span>" if sector else f"<span style='{label_style}'>{exchange}</span>"
+        label = f"<span style='font-size:12px;color:#9ca3af;'>{exchange}{sector}</span>"
     
-        # 股價數據（用於底部代號區）
+    # 股價資訊行（灰色背景、表格式）
     market_data = stock.get("market_data", {})
-    market_info_parts = []
-    if market_data and not market_data.get("error"):
+    price_row = ""
+    if market_data and not market_data.get("error") and ticker:
         price = market_data.get("price")
         pe = market_data.get("pe")
         rsi = market_data.get("rsi")
         change_1m = market_data.get("change_1m")
         
-        if price:
-            market_info_parts.append(f"${price:,.2f}")
-        if pe:
-            market_info_parts.append(f"P/E {pe}")
-        if rsi:
-            market_info_parts.append(f"RSI {rsi}")
+        # 代號
+        ticker_cell = f"{name}({ticker})"
+        
+        # 現價
+        price_cell = f"${price:,.2f}" if price else "—"
+        
+        # P/E
+        pe_cell = str(int(pe)) if pe else "—"
+        
+        # RSI
+        rsi_cell = f"{rsi:.1f}" if rsi else "—"
+        
+        # 1M%
         if change_1m is not None:
             sign = "+" if change_1m > 0 else ""
-            market_info_parts.append(f"1M {sign}{change_1m}%")
+            change_cell = f"{sign}{change_1m:.1f}%"
+        else:
+            change_cell = "—"
+        
+        # 評級（根據RSI和1M%）
+        rating = "—"
+        if rsi and change_1m is not None:
+            if rsi < 30 and change_1m < 0:
+                rating = "⭐超賣"
+            elif rsi > 70 and change_1m > 10:
+                rating = "🔥熱門"
+            elif change_1m > 20:
+                rating = "🚀強勢"
+        
+                price_row = f"""
+        <div style="margin:10px 0;">
+          <!-- 標題列 -->
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 1fr 1fr;gap:12px;padding:6px 14px;font-size:11px;color:#9ca3af;">
+            <div>代號</div>
+            <div style="text-align:right;">現價</div>
+            <div style="text-align:center;">P/E</div>
+            <div style="text-align:center;">RSI</div>
+            <div style="text-align:center;">1M%</div>
+            <div style="text-align:center;">評級</div>
+          </div>
+          <!-- 數據列 -->
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 1fr 1fr;gap:12px;padding:10px 14px;background:#f9fafb;border-radius:6px;font-size:13px;color:#6b7280;">
+            <div style="font-weight:600;color:#374151;">{ticker_cell}</div>
+            <div style="text-align:right;font-weight:600;color:#111827;">{price_cell}</div>
+            <div style="text-align:center;">{pe_cell}</div>
+            <div style="text-align:center;">{rsi_cell}</div>
+            <div style="text-align:center;">{change_cell}</div>
+            <div style="text-align:center;">{rating}</div>
+          </div>
+        </div>
+        """
 
     return f"""
     <div style="border:1px solid #e5e7eb;border-left:4px solid {s_cfg['border']};border-radius:0 10px 10px 0;
-                padding:18px 20px;margin-bottom:14px;background:{s_cfg['bg']};">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <div style="font-size:18px;font-weight:700;color:#111827;">{stock.get('name','')}</div>
+                padding:18px 20px;margin-bottom:14px;background:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:4px;">
+            {_stance_dot(stance)}
+            <span style="font-size:16px;font-weight:700;color:#111827;">{name}</span>
+            <span style="display:inline-block;padding:2px 6px;background:{s_cfg['bg']};color:{s_cfg['dot']};border-radius:3px;font-size:11px;font-weight:600;">{stance}</span>
+            {"<span style='font-size:11px;color:#9ca3af;'>來源 " + src + "</span>" if src else ""}
+          </div>
+        </div>
         <div>{label}</div>
       </div>
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        {_stance_dot(stance)}
-        <span style="font-weight:600;color:{s_cfg['dot']};font-size:14px;">{stance}</span>
-        {_badge('風險：' + risk, r_cfg['color'], r_cfg['bg'])}
-        {"<span style='font-size:12px;color:#9ca3af;'>來源：" + src + "</span>" if src else ""}
-      </div>
-      <div style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:10px;">{stock.get('description','')}</div>
-      {"<div style='font-size:13px;margin-top:6px;'><span style='color:#2563eb;font-weight:600;'>催化劑：</span><span style='color:#374151;'>" + stock.get('catalyst','') + "</span></div>" if stock.get('catalyst') else ""}
+      {price_row}
+      <div style="font-size:14px;color:#374151;line-height:1.7;margin-top:10px;">{stock.get('description','')}</div>
+      {"<div style='font-size:13px;margin-top:8px;'><span style='color:#2563eb;font-weight:600;'>催化劑：</span><span style='color:#374151;'>" + stock.get('catalyst','') + "</span></div>" if stock.get('catalyst') else ""}
       {"<div style='font-size:13px;margin-top:4px;'><span style='color:#dc2626;font-weight:600;'>風險點：</span><span style='color:#374151;'>" + stock.get('key_risk','') + "</span></div>" if stock.get('key_risk') else ""}
-      {"<div style='display:flex;gap:24px;margin-top:12px;padding-top:12px;border-top:1px solid #e5e7eb;'><span style='font-size:13px;color:#6b7280;'>代號：<strong>" + (exchange + " " + ticker if ticker else "—") + "</strong></span>" + ("<span style='font-size:13px;color:#6b7280;'>" + " · ".join(market_info_parts) + "</span>" if market_info_parts else "") + "</div>" if ticker or market_info_parts else ""}
     </div>
     """
 
