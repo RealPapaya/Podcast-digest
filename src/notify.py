@@ -112,34 +112,74 @@ def _build_line_flex(digest: dict) -> dict:
     )
     stance_emoji = {"看多": "🟢", "看空": "🔴", "觀望": "🟡", "中性": "⚪"}.get(stance, "⚪")
 
-        # 個股清單（最多 15 檔）
+            # 個股清單（最多 15 檔）
     stock_rows = []
     for s in stocks[:15]:
         s_stance = s.get("stance", "觀望")
         s_color = {"看多": "#22c55e", "看空": "#ef4444", "觀望": "#f59e0b"}.get(s_stance, "#6b7280")
-        stock_rows.append({
+        
+        # 美股標示
+        name = s.get('name', '')
+        ticker = s.get('ticker', '')
+        exchange = s.get('exchange', '')
+        if exchange == "美股":
+            name = f"🇺🇸 {name}"
+        
+        # 股價資訊（僅顯示價格和1M%）
+        market_data = s.get("market_data", {})
+        price_text = ""
+        if market_data and not market_data.get("error"):
+            price = market_data.get("price")
+            change_1m = market_data.get("change_1m")
+            if price:
+                price_text = f"${price:,.0f}"
+            if change_1m is not None:
+                sign = "+" if change_1m > 0 else ""
+                price_text += f" ({sign}{change_1m}%)"
+        
+        # 股票卡片
+        stock_box = {
             "type": "box",
-            "layout": "horizontal",
+            "layout": "vertical",
             "contents": [
                 {
-                    "type": "text",
-                    "text": f"{s.get('name','')} ({s.get('ticker','')}) ",
-                    "size": "sm",
-                    "color": "#111827",
-                    "flex": 3,
-                },
-                {
-                    "type": "text",
-                    "text": s_stance,
-                    "size": "sm",
-                    "color": s_color,
-                    "flex": 1,
-                    "align": "end",
-                    "weight": "bold",
+                    "type": "box",
+                    "layout": "horizontal",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": f"{name} ({ticker})",
+                            "size": "sm",
+                            "color": "#111827",
+                            "flex": 3,
+                            "weight": "bold",
+                        },
+                        {
+                            "type": "text",
+                            "text": s_stance,
+                            "size": "sm",
+                            "color": s_color,
+                            "flex": 1,
+                            "align": "end",
+                            "weight": "bold",
+                        },
+                    ],
                 },
             ],
             "paddingTop": "4px",
-        })
+        }
+        
+        # 如果有價格資訊，加上第二行
+        if price_text:
+            stock_box["contents"].append({
+                "type": "text",
+                "text": price_text,
+                "size": "xs",
+                "color": "#6b7280",
+                "margin": "xs",
+            })
+        
+        stock_rows.append(stock_box)
 
             # 新聞標題（最多 8 條）
     news_items = []

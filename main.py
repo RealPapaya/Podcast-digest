@@ -15,6 +15,7 @@ import dotenv
 
 from src.fetch_podcast import fetch_latest_episode, download_audio
 from src.analyze import analyze_audio_gemini
+from src.stock_data import enrich_stocks_with_data
 from src.render import render_email_html
 from src.notify import send_gmail, send_line_message
 
@@ -72,13 +73,20 @@ def main():
         log.error("音檔下載失敗，結束")
         sys.exit(1)
 
-    # ── 5. Gemini 直接聆聽音檔分析 ───────────────────────────────
+        # ── 5. Gemini 直接聆聽音檔分析 ───────────────────────────────
     log.info("🎧 Gemini 直接聆聽音檔分析中...")
     digest = analyze_audio_gemini(audio_path, episode)
     if not digest:
         log.error("Gemini 音訊分析失敗，結束")
         audio_path.unlink(missing_ok=True)
         sys.exit(1)
+
+    # ── 6. 獲取股價數據 ──────────────────────────────────────────
+    log.info("📊 獲取股價數據 (Price, P/E, RSI, 1M%)...")
+    stocks = digest.get("stocks", [])
+    if stocks:
+        digest["stocks"] = enrich_stocks_with_data(stocks)
+        log.info(f"✅ 已獲取 {len(stocks)} 檔股票數據")
 
     # ── 7. 渲染 HTML ──────────────────────────────────────────────
     log.info("🎨 渲染 Email HTML...")

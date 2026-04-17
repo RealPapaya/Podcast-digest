@@ -44,6 +44,78 @@ def _badge(text: str, color: str, bg: str) -> str:
     )
 
 
+def _render_stock_card(stock: dict) -> str:
+    """
+    Render a single stock card with market data
+    """
+    stance = stock.get("stance", "觀望")
+    risk = stock.get("risk", "中")
+    s_cfg = STANCE_CONFIG.get(stance, STANCE_CONFIG["觀望"])
+    r_cfg = RISK_CONFIG.get(risk, RISK_CONFIG["中"])
+    src = stock.get("source_time", "")
+
+    ticker = stock.get("ticker", "")
+    exchange = stock.get("exchange", "")
+    sector = stock.get("sector", "")
+    
+    # 美股與產業概述使用不同顏色
+    if exchange == "美股":
+        label_style = "background:#ede9fe;color:#7c3aed;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;"
+        label = f"<span style='{label_style}'>🇺🇸 美股 {sector}</span>" if sector else f"<span style='{label_style}'>🇺🇸 美股</span>"
+    elif not ticker and sector:  # 產業概述（沒有ticker）
+        label_style = "background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;"
+        label = f"<span style='{label_style}'>🏭 {sector}產業</span>"
+    else:
+        label_style = "font-size:13px;color:#6b7280;"
+        label = f"<span style='{label_style}'>{exchange} {sector}</span>" if sector else f"<span style='{label_style}'>{exchange}</span>"
+    
+    # 股價數據
+    market_data = stock.get("market_data", {})
+    price_html = ""
+    if market_data and not market_data.get("error"):
+        price = market_data.get("price")
+        pe = market_data.get("pe")
+        rsi = market_data.get("rsi")
+        change_1m = market_data.get("change_1m")
+        
+        price_parts = []
+        if price:
+            price_parts.append(f"<strong style='font-size:16px;color:#111827;'>${price:,.2f}</strong>")
+        if pe:
+            price_parts.append(f"<span style='font-size:12px;color:#6b7280;'>P/E {pe}</span>")
+        if rsi:
+            rsi_color = "#22c55e" if rsi < 30 else ("#ef4444" if rsi > 70 else "#6b7280")
+            price_parts.append(f"<span style='font-size:12px;color:{rsi_color};font-weight:600;'>RSI {rsi}</span>")
+        if change_1m is not None:
+            sign = "+" if change_1m > 0 else ""
+            change_color = "#22c55e" if change_1m > 0 else ("#ef4444" if change_1m < 0 else "#6b7280")
+            price_parts.append(f"<span style='font-size:12px;color:{change_color};font-weight:600;'>1M {sign}{change_1m}%</span>")
+        
+        if price_parts:
+            price_html = f"<div style='display:flex;gap:10px;align-items:center;margin-top:10px;padding:8px 12px;background:#f9fafb;border-radius:6px;'>" + " · ".join(price_parts) + "</div>"
+
+    return f"""
+    <div style="border:1px solid #e5e7eb;border-left:4px solid {s_cfg['border']};border-radius:0 10px 10px 0;
+                padding:18px 20px;margin-bottom:14px;background:{s_cfg['bg']};">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:18px;font-weight:700;color:#111827;">{stock.get('name','')}</div>
+        <div>{label}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        {_stance_dot(stance)}
+        <span style="font-weight:600;color:{s_cfg['dot']};font-size:14px;">{stance}</span>
+        {_badge('風險：' + risk, r_cfg['color'], r_cfg['bg'])}
+        {"<span style='font-size:12px;color:#9ca3af;'>來源：" + src + "</span>" if src else ""}
+      </div>
+      {price_html}
+      <div style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:10px;">{stock.get('description','')}</div>
+      {"<div style='font-size:13px;margin-top:6px;'><span style='color:#2563eb;font-weight:600;'>催化劑：</span><span style='color:#374151;'>" + stock.get('catalyst','') + "</span></div>" if stock.get('catalyst') else ""}
+      {"<div style='font-size:13px;margin-top:4px;'><span style='color:#dc2626;font-weight:600;'>風險點：</span><span style='color:#374151;'>" + stock.get('key_risk','') + "</span></div>" if stock.get('key_risk') else ""}
+      {"<div style='display:flex;gap:24px;margin-top:12px;padding-top:12px;border-top:1px solid #e5e7eb;'><span style='font-size:13px;color:#6b7280;'>代號：<strong>" + (exchange + " " + ticker if ticker else "—") + "</strong></span></div>" if ticker else ""}
+    </div>
+    """
+
+
 def render_email_html(digest: dict) -> str:
     ep = digest.get("ep_number", "")
     date = digest.get("date", "")
@@ -83,38 +155,9 @@ def render_email_html(digest: dict) -> str:
         """
 
     # ── 個股區塊 ─────────────────────────────────────────────────
-    stocks_html = ""
+        stocks_html = ""
     for stock in stocks:
-        stance = stock.get("stance", "觀望")
-        risk = stock.get("risk", "中")
-        s_cfg = STANCE_CONFIG.get(stance, STANCE_CONFIG["觀望"])
-        r_cfg = RISK_CONFIG.get(risk, RISK_CONFIG["中"])
-        src = stock.get("source_time", "")
-
-        ticker = stock.get("ticker", "")
-        exchange = stock.get("exchange", "")
-        sector = stock.get("sector", "")
-        label = f"{exchange}{sector}" if sector else exchange
-
-        stocks_html += f"""
-        <div style="border:1px solid #e5e7eb;border-left:4px solid {s_cfg['border']};border-radius:0 10px 10px 0;
-                    padding:18px 20px;margin-bottom:14px;background:{s_cfg['bg']};">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <div style="font-size:18px;font-weight:700;color:#111827;">{stock.get('name','')}</div>
-            <div style="font-size:13px;color:#6b7280;">{label}</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-            {_stance_dot(stance)}
-            <span style="font-weight:600;color:{s_cfg['dot']};font-size:14px;">{stance}</span>
-            {_badge('風險：' + risk, r_cfg['color'], r_cfg['bg'])}
-            {"<span style='font-size:12px;color:#9ca3af;'>來源：" + src + "</span>" if src else ""}
-          </div>
-          <div style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:10px;">{stock.get('description','')}</div>
-          {"<div style='font-size:13px;margin-top:6px;'><span style='color:#2563eb;font-weight:600;'>催化劑：</span><span style='color:#374151;'>" + stock.get('catalyst','') + "</span></div>" if stock.get('catalyst') else ""}
-          {"<div style='font-size:13px;margin-top:4px;'><span style='color:#dc2626;font-weight:600;'>風險點：</span><span style='color:#374151;'>" + stock.get('key_risk','') + "</span></div>" if stock.get('key_risk') else ""}
-          {"<div style='display:flex;gap:24px;margin-top:12px;padding-top:12px;border-top:1px solid #e5e7eb;'><span style='font-size:13px;color:#6b7280;'>代號：<strong>" + (exchange + " " + ticker if ticker else "—") + "</strong></span></div>" if ticker else ""}
-        </div>
-        """
+        stocks_html += _render_stock_card(stock)
 
     # ── Q&A 區塊 ─────────────────────────────────────────────────
     qa_html = ""

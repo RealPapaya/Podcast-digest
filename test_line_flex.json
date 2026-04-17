@@ -71,115 +71,150 @@
         },
         {
           "type": "box",
-          "layout": "horizontal",
+          "layout": "vertical",
           "contents": [
             {
-              "type": "text",
-              "text": "台積電 (2330) ",
-              "size": "sm",
-              "color": "#111827",
-              "flex": 3
-            },
-            {
-              "type": "text",
-              "text": "看多",
-              "size": "sm",
-              "color": "#22c55e",
-              "flex": 1,
-              "align": "end",
-              "weight": "bold"
+              "type": "box",
+              "layout": "horizontal",
+              "contents": [
+                {
+                  "type": "text",
+                  "text": "台積電 (2330)",
+                  "size": "sm",
+                  "color": "#111827",
+                  "flex": 3,
+                  "weight": "bold"
+                },
+                {
+                  "type": "text",
+                  "text": "看多",
+                  "size": "sm",
+                  "color": "#22c55e",
+                  "flex": 1,
+                  "align": "end",
+                  "weight": "bold"
+                }
+              ]
             }
           ],
           "paddingTop": "4px"
         },
         {
           "type": "box",
-          "layout": "horizontal",
+          "layout": "vertical",
           "contents": [
             {
-              "type": "text",
-              "text": "聯發科 (2454) ",
-              "size": "sm",
-              "color": "#111827",
-              "flex": 3
-            },
-            {
-              "type": "text",
-              "text": "看多",
-              "size": "sm",
-              "color": "#22c55e",
-              "flex": 1,
-              "align": "end",
-              "weight": "bold"
+              "type": "box",
+              "layout": "horizontal",
+              "contents": [
+                {
+                  "type": "text",
+                  "text": "聯發科 (2454)",
+                  "size": "sm",
+                  "color": "#111827",
+                  "flex": 3,
+                  "weight": "bold"
+                },
+                {
+                  "type": "text",
+                  "text": "看多",
+                  "size": "sm",
+                  "color": "#22c55e",
+                  "flex": 1,
+                  "align": "end",
+                  "weight": "bold"
+                }
+              ]
             }
           ],
           "paddingTop": "4px"
         },
         {
           "type": "box",
-          "layout": "horizontal",
+          "layout": "vertical",
           "contents": [
             {
-              "type": "text",
-              "text": "Marvell (MRVL) ",
-              "size": "sm",
-              "color": "#111827",
-              "flex": 3
-            },
-            {
-              "type": "text",
-              "text": "觀望",
-              "size": "sm",
-              "color": "#f59e0b",
-              "flex": 1,
-              "align": "end",
-              "weight": "bold"
+              "type": "box",
+              "layout": "horizontal",
+              "contents": [
+                {
+                  "type": "text",
+                  "text": "🇺🇸 Marvell (MRVL)",
+                  "size": "sm",
+                  "color": "#111827",
+                  "flex": 3,
+                  "weight": "bold"
+                },
+                {
+                  "type": "text",
+                  "text": "觀望",
+                  "size": "sm",
+                  "color": "#f59e0b",
+                  "flex": 1,
+                  "align": "end",
+                  "weight": "bold"
+                }
+              ]
             }
           ],
           "paddingTop": "4px"
         },
         {
           "type": "box",
-          "layout": "horizontal",
+          "layout": "vertical",
           "contents": [
             {
-              "type": "text",
-              "text": "國巨 (2327) ",
-              "size": "sm",
-              "color": "#111827",
-              "flex": 3
-            },
-            {
-              "type": "text",
-              "text": "觀望",
-              "size": "sm",
-              "color": "#f59e0b",
-              "flex": 1,
-              "align": "end",
-              "weight": "bold"
+              "type": "box",
+              "layout": "horizontal",
+              "contents": [
+                {
+                  "type": "text",
+                  "text": "國巨 (2327)",
+                  "size": "sm",
+                  "color": "#111827",
+                  "flex": 3,
+                  "weight": "bold"
+                },
+                {
+                  "type": "text",
+                  "text": "觀望",
+                  "size": "sm",
+                  "color": "#f59e0b",
+                  "flex": 1,
+                  "align": "end",
+                  "weight": "bold"
+                }
+              ]
             }
           ],
           "paddingTop": "4px"
         },
         {
           "type": "box",
-          "layout": "horizontal",
+          "layout": "vertical",
           "contents": [
             {
-              "type": "text",
-              "text": "啟基 (6285) ",
-              "size": "sm",
-              "color": "#111827",
-              "flex": 3
-            },
-            {
-              "type": "text",
-              "text": "看多",
-              "size": "sm",
-              "color": "#22c55e",
-              "flex": 1,
-              "align": "end",
-              "weight": "bold"
+              "type": "box",
+              "layout": "horizontal",
+              "contents": [
+                {
+                  "type": "text",
+                  "text": "啟基 (6285)",
+                  "size": "sm",
+                  "color": "#111827",
+                  "flex": 3,
+                  "weight": "bold"
+                },
+                {
+                  "type": "text",
+                  "text": "看多",
+                  "size": "sm",
+                  "color": "#22c55e",
+                  "flex": 1,
+                  "align": "end",
+                  "weight": "bold"
+                }
+              ]
             }
           ],
           "paddingTop": "4px"
