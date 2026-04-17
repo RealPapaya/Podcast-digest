@@ -1,125 +1,142 @@
 {
-  "ep_number": "EP653",
-  "date": "2026-04-15",
-  "intro": "本集探討當前市場的強勁走勢，美股大幅反彈，台股標股持續上攻。主持人分享對台積電、聯發科等個股的看法，並回答聽眾關於持股與趨勢判斷的問題，強調投資需深入了解公司業務邏輯。",
-  "market_outlook": {
-    "stance": "看多",
-    "description": "市場走勢極佳，美股從低點大幅反彈，台股各路標股持續衝刺，整體市場表現強勁。"
+  "podcast_info": {
+    "host": "孟恭",
+    "episode": "EP653",
+    "date": "2026-04-15"
   },
-  "news": [
-    {
-      "title": "被動元件漲價",
-      "category": "半導體",
-      "event": "太陽誘電宣布全系列產品漲價，業界認為主因是AI伺服器需求強勁，導致鋁電容SP-Cap等產品缺貨情況明顯。",
-      "perspective": "漲價原因雖稱貴金屬成本上升，但實質上反映AI伺服器需求帶動的產業景氣，部分關鍵零組件供應吃緊。",
-      "source_time": "3-4"
-    }
-  ],
-  "stocks": [
+  "market_overview": {
+    "sentiment": "極佳",
+    "details": [
+      "美股從之前的低點大幅反彈",
+      "台股也跟著各路標股持續向前衝"
+    ]
+  },
+  "stock_analysis": [
     {
       "name": "台積電",
       "ticker": "2330",
-      "exchange": "台股",
-      "sector": "半導體",
-      "stance": "看多",
-      "risk": "中",
-      "description": "目前股價約2080。市場預期明年EPS可跳升至130-140元，若給予20倍本益比，2800元目標價在AI族群中並不誇張。AI晶片對先進製程與封裝需求持續爆發。",
-      "catalyst": "AI營收佔比提升",
-      "key_risk": "地緣政治干擾或半導體週期性波動",
-      "source_time": "0-1"
+      "current_price": 2080,
+      "sentiment": "看多",
+      "rationale": [
+        "市場共識今年EPS約90幾元，明年預期跳升到130-140元",
+        "若給予20倍本益比，2800元目標價在AI族群中並不誇張",
+        "AI晶片對先進製程與封裝的需求持續爆發"
+      ],
+      "catalysts": [
+        "AI營收佔比提升"
+      ],
+      "risks": [
+        "地緣政治干擾",
+        "半導體週期性波動"
+      ]
     },
     {
       "name": "聯發科",
       "ticker": "2454",
-      "exchange": "台股",
-      "sector": "半導體",
-      "stance": "看多",
-      "risk": "中",
-      "description": "目前股價約1790。正從手機晶片商轉型為AI運算大廠，與Google合作的TPU晶片已在台積電確保關鍵產能。AI業務成長動能足以支撐評價重估。",
-      "catalyst": "TPU晶片出貨表現",
-      "key_risk": "手機業務衰退超乎預期",
-      "source_time": "1-2"
+      "current_price": 1790,
+      "sentiment": "看多",
+      "rationale": [
+        "正從手機晶片商轉型為AI運算大廠",
+        "與Google合作的TPU晶片(Zebra Fish V8, Humu Fish V9)已在台積電確保關鍵產能",
+        "AI業務的成長動能足以支撐評價重估 (Re-rate)"
+      ],
+      "catalysts": [
+        "TPU晶片出貨表現"
+      ],
+      "risks": [
+        "手機業務衰退超乎預期"
+      ]
     },
     {
       "name": "Marvell",
       "ticker": "MRVL",
-      "exchange": "美股",
-      "sector": "半導體",
-      "stance": "觀望",
-      "risk": "高",
-      "description": "目前股價約133。成功切入Google供應鏈，負責推論晶片與記憶體處理單元設計，解決AI運算中記憶體頻寬瓶頸。股價已部分反映利多，需觀察後續訂單量級。",
-      "catalyst": "後續訂單量級",
-      "key_risk": "Broadcom的競爭壓力及研發成本高昂",
-      "source_time": "2-3"
+      "exchange": "US",
+      "current_price": 133,
+      "sentiment": "觀望",
+      "rationale": [
+        "成功切入Google供應鏈，負責推論晶片與記憶體處理單元的設計",
+        "AI運算中記憶體頻寬是瓶頸，Marvell的技術正好解決這痛點"
+      ],
+      "catalysts": [
+        "後續訂單量級"
+      ],
+      "risks": [
+        "股價已部分反映利多",
+        "Broadcom的競爭壓力",
+        "研發成本高昂"
+      ]
     },
     {
-      "name": "國巨",
-      "ticker": "2327",
-      "exchange": "台股",
-      "sector": "被動元件",
-      "stance": "觀望",
-      "risk": "中",
-      "description": "目前股價約322。受被動元件產業漲價消息影響，主因AI伺服器需求帶動。需觀察後續需求是否持續支撐股價，以及產業週期性波動。",
-      "catalyst": "AI伺服器需求持續增長",
-      "key_risk": "被動元件產業週期性波動",
-      "source_time": "3-4"
-    },
-    {
-      "name": "華新科",
-      "ticker": "2492",
-      "exchange": "台股",
-      "sector": "被動元件",
-      "stance": "觀望",
-      "risk": "中",
-      "description": "目前股價約144。受被動元件產業漲價消息影響，主因AI伺服器需求帶動。需觀察後續需求是否持續支撐股價，以及產業週期性波動。",
-      "catalyst": "AI伺服器需求持續增長",
-      "key_risk": "被動元件產業週期性波動",
-      "source_time": "3-4"
+      "sector": "被動元件產業",
+      "overview": [
+        "太陽誘電宣布全系列產品漲價，原因為貴金屬成本上升，但業界認為主因是AI伺服器需求",
+        "鋁電容(SP-Cap)缺貨情況最為明顯"
+      ],
+      "stocks_mentioned": [
+        {
+          "name": "國巨",
+          "ticker": "2327",
+          "current_price": 322,
+          "sentiment": "觀望"
+        },
+        {
+          "name": "華新科",
+          "ticker": "2492",
+          "current_price": 144,
+          "sentiment": "觀望"
+        }
+      ]
     },
     {
       "name": "啟基",
       "ticker": "6285",
-      "exchange": "台股",
-      "sector": "網通",
-      "stance": "看多",
-      "risk": "中",
-      "description": "目前股價約243。受惠於低軌衛星大客戶SpaceX Starlink的強勁訂單。單一客戶的訂單金額佔其市值比例極高，顯示基本面支撐強勁。",
-      "catalyst": "SpaceX Starlink訂單持續成長",
-      "key_risk": "過度依賴單一客戶的風險",
-      "source_time": "4-5"
+      "current_price": 243,
+      "sentiment": "看多",
+      "rationale": [
+        "受惠於低軌衛星大客戶SpaceX Starlink的強勁訂單",
+        "單一客戶的訂單金額佔其市值比例極高，顯示基本面支撐強"
+      ],
+      "risks": []
     }
   ],
-  "qa": [
+  "q_and_a": [
     {
-      "title": "美股主要持股與投資心法",
       "question": "美股前五大持股是什麼？",
-      "points": [
-        {
-          "label": "主要持股",
-          "content": "目前主要持股包含CPU類股INTC、ARM、AMD，以及Marvell MRVL、光通訊LITE、COHR、Cloudflare NET和Tesla TSLA。"
-        },
-        {
-          "label": "投資心法",
-          "content": "抱住股票需要愛與信仰，必須深入了解公司的業務邏輯，否則單靠技術面很難在波動中留存。"
-        }
-      ],
-      "quote": "會傷到你的人，都是你最相信、最愛的人；投資也是，最深的傷害往往來自你最有信仰的持股。",
-      "source_time": "5-6"
+      "answer": {
+        "holdings": [
+          "INTC (CPU類)",
+          "ARM (CPU類)",
+          "AMD (CPU類)",
+          "MRVL (Marvell)",
+          "LITE (光通訊)",
+          "COHR (光通訊)",
+          "NET (Cloudflare)",
+          "TSLA (Tesla)"
+        ],
+        "advice": "抱住股票需要愛與信仰，必須深入了解公司的業務邏輯，否則單靠技術面很難在波動中留存。會傷到你的人，都是你最相信、最愛的人；投資也是，最深的傷害往往來自你最有信仰的持股。"
+      }
     },
     {
-      "title": "判斷股票趨勢的方法",
-      "question": "判斷趨勢是看幾天的日 K？",
-      "points": [
-        {
-          "label": "趨勢判斷",
-          "content": "不應只看3到5天的短線震盪，應該結合日線與周線觀察。最簡單的基準點是創新高，因為創新高的股票沒有套牢壓力，趨勢最為明確。"
-        },
-        {
-          "label": "機會成本",
-          "content": "投資是相對值而非絕對值，當手中股票不漲而有更強的標的出現時，應果斷換股，這就是機會成本的思考。"
-        }
-      ],
-      "source_time": "6-7"
+      "question": "判斷趨勢是看幾天的日K？",
+      "answer": {
+        "trend_analysis": "不要只看3到5天的短線震盪，應該結合日線與周線觀察。",
+        "key_indicator": "創新高 (沒有套牢壓力，趨勢最為明確)",
+        "investment_philosophy": "投資是相對值而非絕對值，當手中股票不漲而有更強的標的出現時，應果斷換股，這就是機會成本的思考。"
+      }
     }
-  ]
+  ],
+  "general_advice": {
+    "topic": "給畢業生建議",
+    "advice": "長輩與其在台上講一堆心靈雞湯，不如直接給年輕人錢最實在。要送年輕人三句話，不如送他錢，實質的資源永遠比口頭的鼓勵更有力。"
+  },
+  "overall_market_view": {
+    "sentiment": "看多",
+    "details": [
+      "市場走勢極佳",
+      "美股大復活",
+      "台股標股持續衝刺"
+    ]
+  },
+  "ep_number": "EP653",
+  "date": "2026-04-15"
 }

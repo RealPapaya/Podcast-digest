@@ -3,8 +3,20 @@
 Configuration for Podcast Digest Pipeline
 """
 
-# Gemini API Models (in order of preference)
-# Based on https://aistudio.google.com/rate-limit
+# ═══════════════════════════════════════════════════════════════
+# AI Provider Settings (Fallback Chain)
+# Priority: Claude → OpenAI → Gemini
+# ═══════════════════════════════════════════════════════════════
+
+# Claude (Anthropic) - Highest priority
+CLAUDE_MODEL = "claude-sonnet-4-20250514"  # Latest Sonnet model
+CLAUDE_MAX_TOKENS = 8192
+
+# OpenAI - Second priority
+OPENAI_MODEL = "gpt-4o-mini"  # Fast and cost-effective
+OPENAI_MAX_TOKENS = 8192
+
+# Gemini (Google) - Fallback, multiple models
 GEMINI_MODELS = [
     "gemini-2.5-flash",          # Latest, fast, free tier: 5 RPM, 250K TPM
     "gemini-2.5-pro",            # Best quality (check your quota first)
@@ -34,6 +46,10 @@ GENERATION_CONFIG = {
     "max_output_tokens": 8192,  # Increased for complete JSON response
     "top_p": 0.95,
 }
+
+# AI Provider Fallback Chain
+# Set to True to enable multi-provider fallback
+ENABLE_MULTI_PROVIDER = True
 
 # Logging
 LOG_LEVEL = "INFO"

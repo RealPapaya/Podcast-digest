@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 analyze.py
-將逐字稿送入 Gemini，產出結構化 JSON 筆記
+AI Analysis Module with Multi-Provider Fallback Chain
+Priority: Claude (Anthropic) → GPT-4o-mini (OpenAI) → Gemini (Google)
+Includes caching and retry mechanisms for maximum reliability
 """
 
 import os
@@ -11,9 +13,7 @@ import time
 import hashlib
 import sys
 from pathlib import Path
-from typing import Optional
-
-from google import genai
+from typing import Optional, Callable
 
 # Import config from project root
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -86,6 +86,10 @@ JSON 格式：
 """
 
 
+# ═══════════════════════════════════════════════════════════════
+# Cache Management
+# ═══════════════════════════════════════════════════════════════
+
 def _get_cache_key(transcript: str, episode: dict) -> str:
     """Generate cache key from transcript and episode info"""
     content = f"{episode.get('guid', '')}_{len(transcript)}"
@@ -94,11 +98,14 @@ def _get_cache_key(transcript: str, episode: dict) -> str:
 
 def _load_from_cache(cache_key: str) -> Optional[dict]:
     """Load cached result if exists"""
+    if not config.ENABLE_CACHE:
+        return None
+        
     cache_file = CACHE_DIR / f"{cache_key}.json"
     if cache_file.exists():
         try:
             with open(cache_file, "r", encoding="utf-8") as f:
-                log.info(f"✅ Loading from cache: {cache_key[:8]}...")
+                log.info(f"💾 Loading from cache: {cache_key[:8]}...")
                 return json.load(f)
         except Exception as e:
             log.warning(f"Cache read failed: {e}")
@@ -107,6 +114,9 @@ def _load_from_cache(cache_key: str) -> Optional[dict]:
 
 def _save_to_cache(cache_key: str, data: dict):
     """Save result to cache"""
+    if not config.ENABLE_CACHE:
+        return
+        
     cache_file = CACHE_DIR / f"{cache_key}.json"
     try:
         with open(cache_file, "w", encoding="utf-8") as f:
@@ -116,48 +126,179 @@ def _save_to_cache(cache_key: str, data: dict):
         log.warning(f"Cache write failed: {e}")
 
 
-def analyze_transcript(transcript: str, episode: dict) -> Optional[dict]:
-    """
-    Analyze transcript using Gemini API with retry and cache
-    """
-    api_key = os.environ.get("GOOGLE_API_KEY")
-    if not api_key:
-        log.error("Missing environment variable: GOOGLE_API_KEY")
+# ═══════════════════════════════════════════════════════════════
+# JSON Parsing Helper
+# ═══════════════════════════════════════════════════════════════
+
+def _parse_json(raw: str) -> Optional[dict]:
+    """Clean and parse JSON from AI response"""
+    text = raw.strip()
+    
+    # Remove markdown code block wrapper
+    if text.startswith("```"):
+        parts = text.split("```")
+        if len(parts) >= 2:
+            text = parts[1]
+        if text.startswith("json"):
+            text = text[4:]
+    
+    text = text.strip()
+    
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as e:
+        log.error(f"JSON parsing failed: {e}")
+        log.error(f"Raw text (first 500 chars): {text[:500]}")
         return None
 
-    # Check cache first
-    cache_key = _get_cache_key(transcript, episode)
-    cached = _load_from_cache(cache_key)
-    if cached:
-        return cached
 
-    # Truncate long transcript
+# ═══════════════════════════════════════════════════════════════
+# AI Provider Functions
+# ═══════════════════════════════════════════════════════════════
+
+def _build_user_message(transcript: str, episode: dict) -> str:
+    """Build user message with transcript"""
     if len(transcript) > config.MAX_TRANSCRIPT_CHARS:
         log.warning(f"Transcript too long ({len(transcript)} chars), truncating to {config.MAX_TRANSCRIPT_CHARS}")
-        transcript = transcript[:config.MAX_TRANSCRIPT_CHARS] + "\n\n[Content truncated]"
+        transcript = transcript[:config.MAX_TRANSCRIPT_CHARS] + "\n\n[以上為前段內容，後續略]"
+
+    return (
+        f"以下是股癌 Podcast {episode['ep_number']}（{episode['date']}）的完整逐字稿，"
+        f"請按格式輸出 JSON 筆記：\n\n"
+        f"---逐字稿開始---\n{transcript}\n---逐字稿結束---\n\n請輸出 JSON："
+    )
+
+
+# ── Provider 1: Claude (Anthropic) ──────────────────────────────
+
+def _try_claude(user_message: str) -> Optional[dict]:
+    """Try Claude API with retry mechanism"""
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        log.info("  ⏭️  Claude: ANTHROPIC_API_KEY not set, skipping")
+        return None
+
+    try:
+        import anthropic
+    except ImportError:
+        log.warning("  ⏭️  Claude: 'anthropic' package not installed, skipping")
+        return None
+
+    client = anthropic.Anthropic(api_key=api_key)
+    
+    for attempt in range(config.MAX_RETRIES):
+        try:
+            log.info(f"  📡 Claude: Sending request (attempt {attempt + 1}/{config.MAX_RETRIES})...")
+            
+            message = client.messages.create(
+                model=config.CLAUDE_MODEL,
+                max_tokens=config.CLAUDE_MAX_TOKENS,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_message}],
+            )
+            
+            result = _parse_json(message.content[0].text)
+            if result:
+                log.info("  ✅ Claude: Success")
+                return result
+            else:
+                log.warning("  ⚠️  Claude: Failed to parse JSON")
+                
+        except Exception as e:
+            error_msg = str(e)
+            log.warning(f"  ❌ Claude: {error_msg}")
+            
+            # Retry on rate limit
+            if "rate_limit" in error_msg.lower() or "429" in error_msg:
+                if attempt < config.MAX_RETRIES - 1:
+                    delay = config.RETRY_DELAY * (config.RETRY_MULTIPLIER ** attempt)
+                    log.info(f"  ⏳ Claude: Rate limited, waiting {delay}s...")
+                    time.sleep(delay)
+                    continue
+            
+            # Don't retry on other errors
+            break
+    
+    return None
+
+
+# ── Provider 2: OpenAI GPT-4o-mini ──────────────────────────────
+
+def _try_openai(user_message: str) -> Optional[dict]:
+    """Try OpenAI API with retry mechanism"""
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        log.info("  ⏭️  GPT-4o-mini: OPENAI_API_KEY not set, skipping")
+        return None
+
+    try:
+        import openai
+    except ImportError:
+        log.warning("  ⏭️  GPT-4o-mini: 'openai' package not installed, skipping")
+        return None
+
+    client = openai.OpenAI(api_key=api_key)
+    
+    for attempt in range(config.MAX_RETRIES):
+        try:
+            log.info(f"  📡 GPT-4o-mini: Sending request (attempt {attempt + 1}/{config.MAX_RETRIES})...")
+            
+            response = client.chat.completions.create(
+                model=config.OPENAI_MODEL,
+                max_tokens=config.OPENAI_MAX_TOKENS,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user_message},
+                ],
+            )
+            
+            result = _parse_json(response.choices[0].message.content)
+            if result:
+                log.info("  ✅ GPT-4o-mini: Success")
+                return result
+            else:
+                log.warning("  ⚠️  GPT-4o-mini: Failed to parse JSON")
+                
+        except Exception as e:
+            error_msg = str(e)
+            log.warning(f"  ❌ GPT-4o-mini: {error_msg}")
+            
+            # Retry on rate limit
+            if "rate_limit" in error_msg.lower() or "429" in error_msg:
+                if attempt < config.MAX_RETRIES - 1:
+                    delay = config.RETRY_DELAY * (config.RETRY_MULTIPLIER ** attempt)
+                    log.info(f"  ⏳ GPT-4o-mini: Rate limited, waiting {delay}s...")
+                    time.sleep(delay)
+                    continue
+            
+            # Don't retry on other errors
+            break
+    
+    return None
+
+
+# ── Provider 3: Google Gemini ───────────────────────────────────
+
+def _try_gemini(user_message: str) -> Optional[dict]:
+    """Try Gemini API with retry and model fallback"""
+    api_key = os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        log.info("  ⏭️  Gemini: GOOGLE_API_KEY not set, skipping")
+        return None
+
+    try:
+        from google import genai
+    except ImportError:
+        log.warning("  ⏭️  Gemini: 'google-genai' package not installed, skipping")
+        return None
 
     client = genai.Client(api_key=api_key)
-
-    user_message = f"""{SYSTEM_PROMPT}
-
-以下是股癌 Podcast {episode['ep_number']}（{episode['date']}）的完整逐字稿，請按格式輸出 JSON 筆記：
-
----逐字稿開始---
-{transcript}
----逐字稿結束---
-
-請輸出 JSON："""
-
-    # Try with retry mechanism
-    models_to_try = config.GEMINI_MODELS
     
-    last_error = None
-    raw = None
-    
-    for model_name in models_to_try:
+    # Try multiple Gemini models
+    for model_name in config.GEMINI_MODELS:
         for attempt in range(config.MAX_RETRIES):
             try:
-                log.info(f"📡 Sending request to {model_name} (attempt {attempt + 1}/{config.MAX_RETRIES})...")
+                log.info(f"  📡 Gemini ({model_name}): Sending request (attempt {attempt + 1}/{config.MAX_RETRIES})...")
                 
                 response = client.models.generate_content(
                     model=model_name,
@@ -165,68 +306,106 @@ def analyze_transcript(transcript: str, episode: dict) -> Optional[dict]:
                     config=config.GENERATION_CONFIG
                 )
 
-                raw = response.text.strip()
-                log.info(f"✅ Response received: {len(raw)} chars from {model_name}")
-                break  # Success, exit retry loop
-                
+                result = _parse_json(response.text)
+                if result:
+                    log.info(f"  ✅ Gemini ({model_name}): Success")
+                    return result
+                else:
+                    log.warning(f"  ⚠️  Gemini ({model_name}): Failed to parse JSON")
+                    
             except Exception as e:
-                last_error = e
                 error_msg = str(e)
                 
-                # Check if quota exceeded
+                # Quota exceeded - try next model
                 if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
-                    log.warning(f"⚠️ Quota exceeded for {model_name}, trying next model...")
+                    log.warning(f"  ⚠️  Gemini ({model_name}): Quota exceeded")
                     break  # Try next model
                 
-                # Check if rate limit
+                # Rate limit - retry with backoff
                 if "503" in error_msg or "UNAVAILABLE" in error_msg:
-                    delay = config.RETRY_DELAY * (config.RETRY_MULTIPLIER ** attempt)
-                    log.warning(f"⏳ Rate limited, waiting {delay}s before retry...")
-                    time.sleep(delay)
-                    continue  # Retry same model
+                    if attempt < config.MAX_RETRIES - 1:
+                        delay = config.RETRY_DELAY * (config.RETRY_MULTIPLIER ** attempt)
+                        log.info(f"  ⏳ Gemini ({model_name}): Rate limited, waiting {delay}s...")
+                        time.sleep(delay)
+                        continue
                 
                 # Other errors
-                log.error(f"❌ API error: {error_msg}")
-                if attempt < config.MAX_RETRIES - 1:
-                    time.sleep(config.RETRY_DELAY)
-                    continue
-                else:
-                    break  # Try next model
-        else:
-            continue  # Retry loop completed without break, continue to next model
-        break  # Successfully got response, exit model loop
+                log.warning(f"  ❌ Gemini ({model_name}): {error_msg}")
+                break  # Try next model
     
-    if raw is None:
-        # All models failed
-        log.error(f"❌ All models failed. Last error: {last_error}")
-        return None
+    return None
+
+
+# ═══════════════════════════════════════════════════════════════
+# Main Fallback Chain
+# ═══════════════════════════════════════════════════════════════
+
+PROVIDERS = [
+    ("Claude (Anthropic)", _try_claude),
+    ("GPT-4o-mini (OpenAI)", _try_openai),
+    ("Gemini (Google)", _try_gemini),
+]
+
+
+def analyze_transcript(transcript: str, episode: dict) -> Optional[dict]:
+    """
+    Analyze transcript using multi-provider fallback chain with caching.
     
-    try:
-        # Clean markdown wrapper if exists
-        if raw.startswith("```"):
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
-        raw = raw.strip()
+    Priority order:
+    1. Claude (Anthropic) - Best quality
+    2. GPT-4o-mini (OpenAI) - Fast and reliable
+    3. Gemini (Google) - Fallback option
+    
+    Returns first successful result or None if all fail.
+    """
+    # Check cache first
+    cache_key = _get_cache_key(transcript, episode)
+    cached = _load_from_cache(cache_key)
+    if cached:
+        return cached
 
-        digest = json.loads(raw)
+    # Build user message
+    user_message = _build_user_message(transcript, episode)
 
-        # Fill missing episode info
-        digest.setdefault("ep_number", episode.get("ep_number", ""))
-        digest.setdefault("date", episode.get("date", ""))
+    log.info("🤖 AI Analysis Fallback Chain Started")
+    log.info("─" * 50)
 
-        log.info(
-            f"✅ Parsing successful: {len(digest.get('news', []))} news, "
-            f"{len(digest.get('stocks', []))} stocks, "
-            f"{len(digest.get('qa', []))} Q&A"
-        )
+    # Try each provider in order
+    for provider_name, provider_fn in PROVIDERS:
+        log.info(f"→ Trying {provider_name}...")
         
-        # Save to cache
-        _save_to_cache(cache_key, digest)
-        
-        return digest
+        try:
+            result = provider_fn(user_message)
+        except Exception as e:
+            log.error(f"  ❌ Unexpected error: {e}")
+            result = None
 
-    except json.JSONDecodeError as e:
-        log.error(f"❌ JSON parsing failed: {e}")
-        log.error(f"Raw response (first 500 chars): {raw[:500]}")
-        return None
+        if result is not None:
+            # Fill missing episode info
+            result.setdefault("ep_number", episode.get("ep_number", ""))
+            result.setdefault("date", episode.get("date", ""))
+            
+            log.info("─" * 50)
+            log.info(f"✅ Analysis completed by {provider_name}")
+            log.info(
+                f"   📊 News: {len(result.get('news', []))} / "
+                f"Stocks: {len(result.get('stocks', []))} / "
+                f"Q&A: {len(result.get('qa', []))}"
+            )
+            
+            # Save to cache
+            _save_to_cache(cache_key, result)
+            
+            return result
+        
+        log.info(f"  → {provider_name} failed, trying next provider...")
+
+    # All providers failed
+    log.info("─" * 50)
+    log.error("❌ All AI providers failed")
+    log.error("Please check:")
+    log.error("  1. API keys are set correctly in .env")
+    log.error("  2. API quotas are not exceeded")
+    log.error("  3. Network connection is stable")
+    
+    return None
