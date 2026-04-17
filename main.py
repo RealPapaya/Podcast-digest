@@ -14,7 +14,8 @@ from pathlib import Path
 import dotenv
 
 from src.fetch_podcast import fetch_latest_episode, download_audio
-from src.analyze import analyze_audio_gemini
+from src.transcribe import transcribe_audio
+from src.analyze import analyze_audio_gemini, analyze_transcript
 from src.stock_data import enrich_stocks_with_data
 from src.render import render_email_html
 from src.notify import send_gmail, send_line_message
@@ -73,13 +74,28 @@ def main():
         log.error("音檔下載失敗，結束")
         sys.exit(1)
 
-        # ── 5. Gemini 直接聆聽音檔分析 ───────────────────────────────
-    log.info("🎧 Gemini 直接聆聽音檔分析中...")
-    digest = analyze_audio_gemini(audio_path, episode)
+            # ── 5. AI 分析（多重備援）───────────────────────────────────
+    digest = None
+    
+    # 嘗試 1: Gemini 直接聆聽音檔（最快但不穩定）
+    if os.environ.get("GOOGLE_API_KEY"):
+        log.info("🎧 嘗試 Gemini 直接聆聽音檔分析...")
+        digest = analyze_audio_gemini(audio_path, episode)
+    
+    # 嘗試 2: Whisper 轉錄 + 多 AI fallback（Claude → OpenAI → Gemini）
     if not digest:
-        log.error("Gemini 音訊分析失敗，結束")
+        log.info("🎤 Gemini 音訊分析失敗，改用 Whisper 轉錄...")
+        transcript = transcribe_audio(audio_path)
+        if transcript:
+            log.info("🤖 使用多 AI fallback 分析逐字稿 (Claude → OpenAI → Gemini)...")
+            digest = analyze_transcript(transcript, episode)
+    
+    if not digest:
+        log.error("❌ 所有 AI 分析方式都失敗，結束")
         audio_path.unlink(missing_ok=True)
         sys.exit(1)
+    
+    log.info("✅ AI 分析完成")
 
     # ── 6. 獲取股價數據 ──────────────────────────────────────────
     log.info("📊 獲取股價數據 (Price, P/E, RSI, 1M%)...")

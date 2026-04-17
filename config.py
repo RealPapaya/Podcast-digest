@@ -18,9 +18,9 @@ OPENAI_MAX_TOKENS = 8192
 
 # Gemini (Google) - Fallback, multiple models
 GEMINI_MODELS = [
-    "gemini-3.0-flash",          # Primary: newest, fastest
-    "gemini-2.5-flash",          # Fallback
-    "gemini-2.0-flash",          # Fallback
+    "gemini-2.5-flash",          # Primary: best price-performance
+    "gemini-2.5-pro",            # Fallback: most advanced
+    "gemini-2.0-flash",          # Fallback: deprecated but stable
 ]
 
 # API retry settings

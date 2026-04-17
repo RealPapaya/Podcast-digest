@@ -1,0 +1,8 @@
+warning: LF will be replaced by CRLF in config.py.
+The file will have its original line endings in your working directory.
+ config.py         | 6 [32m+++[m[31m---[m
+ src/render.py     | 6 [32m+++[m[31m---[m
+ src/stock_data.py | 2 [31m--[m
+ 3 files changed, 6 insertions(+), 8 deletions(-)
+warning: LF will be replaced by CRLF in src/stock_data.py.
+The file will have its original line endings in your working directory.

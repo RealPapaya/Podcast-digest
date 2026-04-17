@@ -101,14 +101,14 @@ def _render_stock_card(stock: dict) -> str:
                 rating = "⭐超賣"
             elif rsi > 70 and change_1m > 10:
                 rating = "🔥熱門"
-            elif change_1m > 20:
+                        elif change_1m > 20:
                 rating = "🚀強勢"
         
-                price_row = f"""
+        price_row = f"""
         <div style="margin:10px 0;">
           <!-- 標題列 -->
           <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 1fr 1fr;gap:12px;padding:6px 14px;font-size:11px;color:#9ca3af;">
-            <div>代號</div>
+            <div>主題／標的觀點</div>
             <div style="text-align:right;">現價</div>
             <div style="text-align:center;">P/E</div>
             <div style="text-align:center;">RSI</div>

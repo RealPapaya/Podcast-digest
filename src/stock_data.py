@@ -56,8 +56,6 @@ def get_stock_metrics(ticker: str, exchange: str = "台股") -> Dict:
     # Format ticker for yfinance
     if exchange == "台股":
         yf_ticker = f"{ticker}.TW"
-        if ticker.startswith("6"):  # OTC stocks
-            yf_ticker = f"{ticker}.TWO"
     elif exchange == "美股":
         yf_ticker = ticker
     else:
