@@ -336,6 +336,107 @@ def _try_gemini(user_message: str) -> Optional[dict]:
     return None
 
 
+# ── Audio Analysis: Gemini direct audio ────────────────────────
+
+def analyze_audio_gemini(audio_path: Path, episode: dict) -> Optional[dict]:
+    """直接上傳音檔給 Gemini 分析，不需 Whisper 轉錄"""
+    api_key = os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        log.error("未設定 GOOGLE_API_KEY，無法進行音訊分析")
+        return None
+
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError:
+        log.error("'google-genai' 套件未安裝，請執行 pip install google-genai")
+        return None
+
+    cache_key = _get_cache_key(str(audio_path), episode)
+    cached = _load_from_cache(cache_key)
+    if cached:
+        log.info("  ✅ 從快取載入分析結果")
+        return cached
+
+    client = genai.Client(api_key=api_key)
+
+    mime_map = {".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".wav": "audio/wav", ".ogg": "audio/ogg"}
+    mime_type = mime_map.get(Path(audio_path).suffix.lower(), "audio/mpeg")
+
+    log.info(f"📤 上傳音檔至 Gemini Files API：{audio_path}")
+    try:
+        uploaded = client.files.upload(path=str(audio_path), config={"mime_type": mime_type})
+    except TypeError:
+        # 舊版 SDK 使用不同參數名稱
+        uploaded = client.files.upload(file=str(audio_path), mime_type=mime_type)
+
+    # 等待 Gemini 處理完成
+    while uploaded.state.name == "PROCESSING":
+        time.sleep(3)
+        uploaded = client.files.get(name=uploaded.name)
+
+    if uploaded.state.name == "FAILED":
+        log.error("Gemini Files API 處理音檔失敗")
+        return None
+
+    log.info(f"✅ 音檔上傳完成：{uploaded.uri}")
+
+    prompt = (
+        f"以下是股癌 Podcast {episode.get('ep_number', 'EP???')}（{episode.get('date', '')}）的完整音訊，"
+        f"請仔細聆聽後，按格式輸出 JSON 筆記："
+    )
+
+    result = None
+    for model_name in config.GEMINI_MODELS:
+        for attempt in range(config.MAX_RETRIES):
+            try:
+                log.info(f"  📡 Gemini audio ({model_name}): attempt {attempt + 1}/{config.MAX_RETRIES}...")
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=[
+                        {"file_data": {"file_uri": uploaded.uri, "mime_type": mime_type}},
+                        {"text": prompt},
+                    ],
+                    config=types.GenerateContentConfig(
+                        system_instruction=SYSTEM_PROMPT,
+                        temperature=config.GENERATION_CONFIG["temperature"],
+                        max_output_tokens=config.GENERATION_CONFIG["max_output_tokens"],
+                        top_p=config.GENERATION_CONFIG["top_p"],
+                    ),
+                )
+                result = _parse_json(response.text)
+                if result:
+                    log.info(f"  ✅ Gemini audio ({model_name}): 成功")
+                    break
+                else:
+                    log.warning(f"  ⚠️  Gemini audio ({model_name}): JSON 解析失敗")
+            except Exception as e:
+                err = str(e)
+                if "429" in err or "RESOURCE_EXHAUSTED" in err:
+                    log.warning(f"  ⚠️  Gemini ({model_name}): 配額超限，換下一個模型")
+                    break
+                if "503" in err or "UNAVAILABLE" in err:
+                    if attempt < config.MAX_RETRIES - 1:
+                        delay = config.RETRY_DELAY * (config.RETRY_MULTIPLIER ** attempt)
+                        log.info(f"  ⏳ Gemini ({model_name}): 等待 {delay}s 後重試...")
+                        time.sleep(delay)
+                        continue
+                log.warning(f"  ❌ Gemini audio ({model_name}): {err}")
+                break
+        if result:
+            break
+
+    try:
+        client.files.delete(name=uploaded.name)
+        log.info("🗑️  已清理 Gemini Files API 暫存檔")
+    except Exception:
+        pass
+
+    if result:
+        _save_to_cache(cache_key, result)
+    return result
+
+
 # ═══════════════════════════════════════════════════════════════
 # Main Fallback Chain
 # ═══════════════════════════════════════════════════════════════

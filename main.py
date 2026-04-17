@@ -14,8 +14,7 @@ from pathlib import Path
 import dotenv
 
 from src.fetch_podcast import fetch_latest_episode, download_audio
-from src.transcribe import transcribe_audio
-from src.analyze import analyze_transcript
+from src.analyze import analyze_audio_gemini
 from src.render import render_email_html
 from src.notify import send_gmail, send_line_message
 
@@ -73,19 +72,12 @@ def main():
         log.error("音檔下載失敗，結束")
         sys.exit(1)
 
-    # ── 5. Whisper 轉錄 ───────────────────────────────────────────
-    log.info("🎯 開始轉錄（可能需要 20–60 分鐘）...")
-    transcript = transcribe_audio(audio_path)
-    if not transcript:
-        log.error("轉錄失敗，結束")
-        sys.exit(1)
-    log.info(f"📝 轉錄完成，共 {len(transcript)} 字")
-
-    # ── 6. Gemini 分析 ────────────────────────────────────────────
-    log.info("🤖 Gemini 分析中...")
-    digest = analyze_transcript(transcript, episode)
+    # ── 5. Gemini 直接聆聽音檔分析 ───────────────────────────────
+    log.info("🎧 Gemini 直接聆聽音檔分析中...")
+    digest = analyze_audio_gemini(audio_path, episode)
     if not digest:
-        log.error("Gemini 分析失敗，結束")
+        log.error("Gemini 音訊分析失敗，結束")
+        audio_path.unlink(missing_ok=True)
         sys.exit(1)
 
     # ── 7. 渲染 HTML ──────────────────────────────────────────────
