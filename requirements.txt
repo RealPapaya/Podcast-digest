@@ -1,5 +1,4 @@
 # 股癌 Digest Pipeline 依賴
-faster-whisper>=1.0.0
 
 # AI Providers（三選一自動 fallback）
 anthropic>=0.40.0

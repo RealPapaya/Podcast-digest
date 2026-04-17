@@ -364,11 +364,10 @@ def analyze_audio_gemini(audio_path: Path, episode: dict) -> Optional[dict]:
     mime_type = mime_map.get(Path(audio_path).suffix.lower(), "audio/mpeg")
 
     log.info(f"📤 上傳音檔至 Gemini Files API：{audio_path}")
-    try:
-        uploaded = client.files.upload(path=str(audio_path), config={"mime_type": mime_type})
-    except TypeError:
-        # 舊版 SDK 使用不同參數名稱
-        uploaded = client.files.upload(file=str(audio_path), mime_type=mime_type)
+    uploaded = client.files.upload(
+        file=str(audio_path),
+        config=types.UploadFileConfig(mime_type=mime_type),
+    )
 
     # 等待 Gemini 處理完成
     while uploaded.state.name == "PROCESSING":
