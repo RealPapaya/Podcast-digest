@@ -116,6 +116,7 @@ def step_analyze() -> Optional[dict]:
 
 def step_render(digest: dict) -> str:
     log.info("🎨 測試 HTML 渲染...")
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
     from src.render import render_email_html
 
     html = render_email_html(digest)
@@ -127,6 +128,7 @@ def step_render(digest: dict) -> str:
 
 def step_email(html: str, digest: dict):
     log.info("📧 測試 Gmail 發送...")
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
     from src.notify import send_gmail
 
     ok = send_gmail(html, digest)
@@ -141,6 +143,7 @@ def step_email(html: str, digest: dict):
 
 def step_line(digest: dict):
     log.info("📱 測試 LINE 發送...")
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
     from src.notify import send_line_message
 
     ok = send_line_message(digest)
@@ -204,9 +207,10 @@ def main():
     if args.step in ("all", "render", "email"):
         html = step_render(digest)
 
-    # 發送 Email
+        # 發送 Email
     if args.step in ("all", "email"):
         if not html:
+            sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
             from src.render import render_email_html
             html = render_email_html(digest)
         step_email(html, digest)

@@ -10,6 +10,8 @@ import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 from typing import Optional
 
 import requests
@@ -59,6 +61,18 @@ def send_gmail(html_content: str, digest: dict) -> bool:
 
     msg.attach(MIMEText(plain_text, "plain", "utf-8"))
     msg.attach(MIMEText(html_content, "html", "utf-8"))
+
+    # 附加 HTML 檔案
+    html_filename = f"stock_digest_{ep}.html"
+    html_attachment = MIMEBase("text", "html")
+    html_attachment.set_payload(html_content.encode("utf-8"))
+    encoders.encode_base64(html_attachment)
+    html_attachment.add_header(
+        "Content-Disposition",
+        f"attachment; filename={html_filename}"
+    )
+    msg.attach(html_attachment)
+    log.info(f"📎 附加 HTML 檔案: {html_filename}")
 
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
@@ -249,7 +263,7 @@ def send_line_message(digest: dict) -> bool:
         log.warning("未設定 LINE 環境變數，略過 LINE 發送")
         return False
 
-    flex_msg = _build_line_flex(digest)
+        flex_msg = _build_line_flex(digest)
 
     payload = {
         "to": user_id,
@@ -257,6 +271,7 @@ def send_line_message(digest: dict) -> bool:
     }
 
     try:
+        log.info(f"📡 準備發送 LINE 訊息至 {user_id[:10]}...")
         resp = requests.post(
             LINE_API_URL,
             headers={
@@ -270,10 +285,25 @@ def send_line_message(digest: dict) -> bool:
         if resp.status_code == 200:
             log.info("✅ LINE 訊息發送成功")
             return True
+        elif resp.status_code == 401:
+            log.error(f"LINE API 認證失敗：Token 可能無效或過期")
+            log.error(f"請檢查 LINE_CHANNEL_ACCESS_TOKEN 是否正確")
+            return False
+        elif resp.status_code == 400:
+            log.error(f"LINE API 請求錯誤：{resp.text}")
+            log.error(f"可能是 User ID 或 Flex Message 格式有誤")
+            return False
         else:
             log.error(f"LINE API 錯誤 {resp.status_code}：{resp.text}")
             return False
 
+    except requests.exceptions.ConnectionError as e:
+        log.error(f"LINE 連線錯誤：{e}")
+        log.error("請檢查：")
+        log.error("  1. 網路連線是否正常")
+        log.error("  2. LINE_CHANNEL_ACCESS_TOKEN 是否正確")
+        log.error("  3. Token 是否已過期（需重新產生）")
+        return False
     except Exception as e:
         log.error(f"LINE 發送失敗：{e}")
         return False
