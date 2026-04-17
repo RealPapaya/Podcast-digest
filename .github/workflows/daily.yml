@@ -10,7 +10,7 @@ jobs:
   digest:
     name: 產生並發送投資筆記
     runs-on: ubuntu-latest
-    timeout-minutes: 180  # 最多 3 小時（含 Whisper 轉錄）
+    timeout-minutes: 30  # Gemini 直接分析音檔，無需 Whisper 轉錄
 
     steps:
       # ── 1. 取得程式碼 ─────────────────────────────────────────
@@ -24,15 +24,11 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      # ── 3. 安裝系統依賴（ffmpeg 給 Whisper 用）───────────────
-      - name: 📦 安裝 ffmpeg
-        run: sudo apt-get install -y ffmpeg
-
-      # ── 4. 安裝 Python 套件 ───────────────────────────────────
+      # ── 3. 安裝 Python 套件 ───────────────────────────────────
       - name: 📦 安裝 Python 套件
         run: pip install -r requirements.txt
 
-      # ── 5. 執行主程式 ─────────────────────────────────────────
+      # ── 4. 執行主程式 ─────────────────────────────────────────
       - name: 🚀 執行 Digest Pipeline
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -43,7 +39,7 @@ jobs:
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
         run: python main.py
 
-      # ── 6. 儲存狀態（記錄已處理的集數）──────────────────────
+      # ── 5. 儲存狀態（記錄已處理的集數）──────────────────────
       - name: 💾 提交狀態更新
         run: |
           git config user.name "github-actions[bot]"
