@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 股癌 Podcast Digest Pipeline
 自動抓取、轉錄、分析並發送每日投資筆記

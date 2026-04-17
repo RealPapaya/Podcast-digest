@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 fetch_podcast.py
 抓取股癌 Podcast RSS，取得最新集資訊並下載音檔

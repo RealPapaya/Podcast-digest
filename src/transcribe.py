@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 transcribe.py
 使用 faster-whisper 進行語音轉文字（中文優化）

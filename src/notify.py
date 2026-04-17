@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 notify.py
 發送 Gmail 和 LINE Bot 推播通知

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 render.py
 將 digest dict 渲染成精美 HTML Email（對標截圖設計）

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 test_pipeline.py
 快速測試腳本 — 跳過 Whisper 轉錄，用假逐字稿測試後半段流程
@@ -16,6 +17,11 @@ import sys
 import json
 import argparse
 import logging
+from typing import Optional
+
+import dotenv
+
+dotenv.load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,
@@ -88,7 +94,7 @@ MOCK_EPISODE = {
 }
 
 
-def step_analyze() -> dict | None:
+def step_analyze() -> Optional[dict]:
     log.info("🤖 測試 Gemini 分析...")
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from src.analyze import analyze_transcript
