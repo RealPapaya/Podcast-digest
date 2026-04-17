@@ -400,8 +400,9 @@ def analyze_audio_gemini(audio_path: Path, episode: dict) -> Optional[dict]:
                     config=types.GenerateContentConfig(
                         system_instruction=SYSTEM_PROMPT,
                         temperature=config.GENERATION_CONFIG["temperature"],
-                        max_output_tokens=config.GENERATION_CONFIG["max_output_tokens"],
+                        max_output_tokens=65536,
                         top_p=config.GENERATION_CONFIG["top_p"],
+                        thinking_config=types.ThinkingConfig(thinking_budget=0),
                     ),
                 )
                 result = _parse_json(response.text)

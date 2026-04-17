@@ -20,6 +20,7 @@ OPENAI_MAX_TOKENS = 8192
 GEMINI_MODELS = [
     "gemini-3.0-flash",          # Primary: newest, fastest
     "gemini-2.5-flash",          # Fallback
+    "gemini-2.0-flash",          # Fallback
 ]
 
 # API retry settings
