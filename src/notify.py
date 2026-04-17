@@ -203,7 +203,7 @@ def _build_line_flex(digest: dict) -> dict:
                             },
                             {
                                 "type": "text",
-                                "text": market.get("description", "")[:80],
+                                "text": (market.get("description") or "—")[:80],
                                 "size": "sm",
                                 "color": "#374151",
                                 "wrap": True,
