@@ -69,30 +69,24 @@ def _render_stock_card(stock: dict) -> str:
         label_style = "font-size:13px;color:#6b7280;"
         label = f"<span style='{label_style}'>{exchange} {sector}</span>" if sector else f"<span style='{label_style}'>{exchange}</span>"
     
-    # 股價數據
+        # 股價數據（用於底部代號區）
     market_data = stock.get("market_data", {})
-    price_html = ""
+    market_info_parts = []
     if market_data and not market_data.get("error"):
         price = market_data.get("price")
         pe = market_data.get("pe")
         rsi = market_data.get("rsi")
         change_1m = market_data.get("change_1m")
         
-        price_parts = []
         if price:
-            price_parts.append(f"<strong style='font-size:16px;color:#111827;'>${price:,.2f}</strong>")
+            market_info_parts.append(f"${price:,.2f}")
         if pe:
-            price_parts.append(f"<span style='font-size:12px;color:#6b7280;'>P/E {pe}</span>")
+            market_info_parts.append(f"P/E {pe}")
         if rsi:
-            rsi_color = "#22c55e" if rsi < 30 else ("#ef4444" if rsi > 70 else "#6b7280")
-            price_parts.append(f"<span style='font-size:12px;color:{rsi_color};font-weight:600;'>RSI {rsi}</span>")
+            market_info_parts.append(f"RSI {rsi}")
         if change_1m is not None:
             sign = "+" if change_1m > 0 else ""
-            change_color = "#22c55e" if change_1m > 0 else ("#ef4444" if change_1m < 0 else "#6b7280")
-            price_parts.append(f"<span style='font-size:12px;color:{change_color};font-weight:600;'>1M {sign}{change_1m}%</span>")
-        
-        if price_parts:
-            price_html = f"<div style='display:flex;gap:10px;align-items:center;margin-top:10px;padding:8px 12px;background:#f9fafb;border-radius:6px;'>" + " · ".join(price_parts) + "</div>"
+            market_info_parts.append(f"1M {sign}{change_1m}%")
 
     return f"""
     <div style="border:1px solid #e5e7eb;border-left:4px solid {s_cfg['border']};border-radius:0 10px 10px 0;
@@ -101,17 +95,16 @@ def _render_stock_card(stock: dict) -> str:
         <div style="font-size:18px;font-weight:700;color:#111827;">{stock.get('name','')}</div>
         <div>{label}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
         {_stance_dot(stance)}
         <span style="font-weight:600;color:{s_cfg['dot']};font-size:14px;">{stance}</span>
         {_badge('風險：' + risk, r_cfg['color'], r_cfg['bg'])}
         {"<span style='font-size:12px;color:#9ca3af;'>來源：" + src + "</span>" if src else ""}
       </div>
-      {price_html}
       <div style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:10px;">{stock.get('description','')}</div>
       {"<div style='font-size:13px;margin-top:6px;'><span style='color:#2563eb;font-weight:600;'>催化劑：</span><span style='color:#374151;'>" + stock.get('catalyst','') + "</span></div>" if stock.get('catalyst') else ""}
       {"<div style='font-size:13px;margin-top:4px;'><span style='color:#dc2626;font-weight:600;'>風險點：</span><span style='color:#374151;'>" + stock.get('key_risk','') + "</span></div>" if stock.get('key_risk') else ""}
-      {"<div style='display:flex;gap:24px;margin-top:12px;padding-top:12px;border-top:1px solid #e5e7eb;'><span style='font-size:13px;color:#6b7280;'>代號：<strong>" + (exchange + " " + ticker if ticker else "—") + "</strong></span></div>" if ticker else ""}
+      {"<div style='display:flex;gap:24px;margin-top:12px;padding-top:12px;border-top:1px solid #e5e7eb;'><span style='font-size:13px;color:#6b7280;'>代號：<strong>" + (exchange + " " + ticker if ticker else "—") + "</strong></span>" + ("<span style='font-size:13px;color:#6b7280;'>" + " · ".join(market_info_parts) + "</span>" if market_info_parts else "") + "</div>" if ticker or market_info_parts else ""}
     </div>
     """
 
