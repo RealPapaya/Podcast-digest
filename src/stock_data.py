@@ -56,48 +56,81 @@ def get_stock_metrics(ticker: str, exchange: str = "台股") -> Dict:
     # Format ticker for yfinance
     if exchange == "台股":
         yf_ticker = f"{ticker}.TW"
+        # Also try .TWO for OTC stocks if .TW fails
+        fallback_ticker = f"{ticker}.TWO"
     elif exchange == "美股":
         yf_ticker = ticker
+        fallback_ticker = None
     else:
         result["error"] = f"Unknown exchange: {exchange}"
         return result
     
-    try:
-        log.info(f"📊 Fetching data for {yf_ticker}...")
-        stock = yf.Ticker(yf_ticker)
-        
-        # Get basic info
-        info = stock.info
-        
-        # Current price
-        result["price"] = info.get("currentPrice") or info.get("regularMarketPrice")
-        
-        # P/E ratio (prefer forward P/E, fallback to trailing P/E)
-        result["pe"] = info.get("forwardPE") or info.get("trailingPE")
-        if result["pe"]:
-            result["pe"] = round(result["pe"], 2)
-        
-        # Get historical data for RSI and 1M% calculation
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=60)  # Get 60 days for RSI calculation
-        
-        hist = stock.history(start=start_date, end=end_date)
-        
-        if not hist.empty:
-            # Calculate RSI
-            result["rsi"] = _calculate_rsi(hist['Close'])
+    def _try_fetch_ticker(ticker_symbol: str) -> bool:
+        """Try to fetch data for a ticker symbol. Returns True if successful."""
+        try:
+            log.info(f"📊 Fetching data for {ticker_symbol}...")
+            stock = yf.Ticker(ticker_symbol)
             
-            # Calculate 1 month % change
-            if len(hist) >= 20:  # At least 20 trading days (~1 month)
-                price_1m_ago = hist['Close'].iloc[-21]  # 21 days ago (1 month)
-                current_price = hist['Close'].iloc[-1]
-                result["change_1m"] = round(((current_price - price_1m_ago) / price_1m_ago) * 100, 2)
-        
-        log.info(f"✅ {yf_ticker}: ${result['price']}, P/E={result['pe']}, RSI={result['rsi']}, 1M={result['change_1m']}%")
-        
-    except Exception as e:
-        log.error(f"❌ Failed to fetch {yf_ticker}: {e}")
-        result["error"] = str(e)
+            # Get basic info
+            info = stock.info
+            
+            # Check if ticker is valid (yfinance returns empty dict for invalid tickers)
+            if not info or len(info) < 5:
+                log.warning(f"⚠️  {ticker_symbol}: No data available (possibly delisted or invalid)")
+                return False
+            
+            # Current price
+            result["price"] = info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose")
+            
+            # P/E ratio (prefer forward P/E, fallback to trailing P/E)
+            result["pe"] = info.get("forwardPE") or info.get("trailingPE")
+            if result["pe"]:
+                result["pe"] = round(result["pe"], 2)
+            
+            # Get historical data for RSI and 1M% calculation
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=60)  # Get 60 days for RSI calculation
+            
+            hist = stock.history(start=start_date, end=end_date)
+            
+            if not hist.empty:
+                # Calculate RSI
+                result["rsi"] = _calculate_rsi(hist['Close'])
+                
+                # Calculate 1 month % change
+                if len(hist) >= 20:  # At least 20 trading days (~1 month)
+                    price_1m_ago = hist['Close'].iloc[-21]  # 21 days ago (1 month)
+                    current_price = hist['Close'].iloc[-1]
+                    result["change_1m"] = round(((current_price - price_1m_ago) / price_1m_ago) * 100, 2)
+            
+            # Check if we got any useful data
+            if result["price"] is None and hist.empty:
+                log.warning(f"⚠️  {ticker_symbol}: No price or historical data")
+                return False
+            
+            log.info(f"✅ {ticker_symbol}: ${result['price']}, P/E={result['pe']}, RSI={result['rsi']}, 1M={result['change_1m']}%")
+            return True
+            
+        except Exception as e:
+            error_msg = str(e)
+            # Don't log as ERROR for 404 (stock not found) - it's expected for delisted stocks
+            if "404" in error_msg or "Not Found" in error_msg:
+                log.warning(f"⚠️  {ticker_symbol}: Stock not found (possibly delisted)")
+            else:
+                log.error(f"❌ {ticker_symbol}: {error_msg}")
+            return False
+    
+    # Try primary ticker
+    success = _try_fetch_ticker(yf_ticker)
+    
+    # If failed and we have a fallback (TW -> TWO for OTC stocks), try it
+    if not success and fallback_ticker:
+        log.info(f"🔄 Trying fallback ticker {fallback_ticker}...")
+        success = _try_fetch_ticker(fallback_ticker)
+    
+    # Set error if no data was retrieved
+    if not success:
+        result["error"] = "Stock data unavailable (possibly delisted or invalid ticker)"
     
     return result
 
