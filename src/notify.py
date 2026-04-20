@@ -325,9 +325,9 @@ def send_line_message(digest: dict) -> bool:
     summary_card = _build_line_summary_card(digest)
     stocks_card = _build_line_stocks_card(digest)
 
-        payload = {
+    payload = {
         "to": user_id,
-        "messages": [summary_card, stocks_card],  # 發送兩則訊息
+        "messages": [summary_card, stocks_card],
     }
 
     try:
