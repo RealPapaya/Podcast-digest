@@ -5,6 +5,12 @@ on:
     # 每天 台灣時間 早上 10:00（UTC 02:00）執行
     - cron: "0 2 * * *"
   workflow_dispatch:  # 允許手動觸發（測試用）
+    inputs:
+      force:
+        description: '強制重新處理已處理過的集數'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   digest:
@@ -28,7 +34,7 @@ jobs:
       - name: 📦 安裝 Python 套件
         run: pip install -r requirements.txt
 
-      # ── 4. 執行主程式 ─────────────────────────────────────────
+            # ── 4. 執行主程式 ─────────────────────────────────────────
       - name: 🚀 執行 Digest Pipeline
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -37,7 +43,7 @@ jobs:
           RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
-        run: python main.py
+        run: python main.py ${{ github.event.inputs.force == 'true' && '--force' || '' }}
 
       # ── 5. 儲存狀態（記錄已處理的集數）──────────────────────
       - name: 💾 提交狀態更新

@@ -9,6 +9,7 @@ import os
 import sys
 import json
 import logging
+import argparse
 from pathlib import Path
 
 import dotenv
@@ -47,7 +48,18 @@ def save_state(state: dict):
 
 
 def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="股癌 Podcast Digest Pipeline")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="強制重新處理已處理過的集數（忽略 state.json）"
+    )
+    args = parser.parse_args()
+    
     log.info("🎙️  股癌 Digest Pipeline 啟動")
+    if args.force:
+        log.info("⚡ 強制模式：將重新處理已處理過的集數")
 
     # ── 1. 載入上次狀態 ──────────────────────────────────────────
     state = load_state()
@@ -62,9 +74,10 @@ def main():
 
     log.info(f"📻 最新集：{episode['title']} ({episode['date']})")
 
-    # ── 3. 檢查是否已處理過 ───────────────────────────────────────
-    if episode["guid"] == last_guid:
+        # ── 3. 檢查是否已處理過 ───────────────────────────────────────
+    if not args.force and episode["guid"] == last_guid:
         log.info("✅ 此集已處理過，略過")
+        log.info("💡 提示：使用 --force 參數可強制重新處理")
         sys.exit(0)
 
     # ── 4. 下載音檔 ───────────────────────────────────────────────
