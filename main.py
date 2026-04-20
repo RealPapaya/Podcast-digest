@@ -98,11 +98,24 @@ def main():
     log.info("✅ AI 分析完成")
 
     # ── 6. 獲取股價數據 ──────────────────────────────────────────
-    log.info("📊 獲取股價數據 (Price, P/E, RSI, 1M%)...")
+        log.info("📊 獲取股價數據 (Price, P/E, RSI, 1M%)...")
+    
+    # Individual stocks
     stocks = digest.get("stocks", [])
     if stocks:
         digest["stocks"] = enrich_stocks_with_data(stocks)
-        log.info(f"✅ 已獲取 {len(stocks)} 檔股票數據")
+        log.info(f"✅ 已獲取 {len(stocks)} 檔個股數據")
+    
+    # Sector analysis stocks
+    sector_analysis = digest.get("sector_analysis", [])
+    sector_stock_count = 0
+    for sector in sector_analysis:
+        related_stocks = sector.get("related_stocks", [])
+        if related_stocks:
+            sector["related_stocks"] = enrich_stocks_with_data(related_stocks)
+            sector_stock_count += len(related_stocks)
+    if sector_stock_count > 0:
+        log.info(f"✅ 已獲取 {sector_stock_count} 檔族群股票數據")
 
     # ── 7. 渲染 HTML ──────────────────────────────────────────────
     log.info("🎨 渲染 Email HTML...")

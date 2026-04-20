@@ -486,7 +486,10 @@ def analyze_audio_gemini(audio_path: Path, episode: dict) -> Optional[dict]:
     except Exception:
         pass
 
-    if result:
+        if result:
+        # Fill missing episode info (in case AI didn't include them)
+        result.setdefault("ep_number", episode.get("ep_number", ""))
+        result.setdefault("date", episode.get("date", ""))
         _save_to_cache(cache_key, result)
     return result
 

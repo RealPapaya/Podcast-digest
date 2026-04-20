@@ -117,9 +117,18 @@ def enrich_stocks_with_data(stocks: list) -> list:
     for stock in stocks:
         ticker = stock.get("ticker")
         exchange = stock.get("exchange", "台股")
+        name = stock.get("name", "")
         
         # Skip if no ticker (e.g., sector overview)
         if not ticker:
+            enriched.append(stock)
+            continue
+        
+        # Skip invalid tickers (AI parsing errors)
+        invalid_tickers = ["無", "N/A", "—", "-", "待確認", "未知", "TBD", "?", "？"]
+        if ticker.strip() in invalid_tickers:
+            log.warning(f"⚠️ 跳過無效 ticker: {name} (ticker={ticker})")
+            stock["market_data"] = {"error": "Invalid ticker", "price": None, "pe": None, "rsi": None, "change_1m": None}
             enriched.append(stock)
             continue
         
