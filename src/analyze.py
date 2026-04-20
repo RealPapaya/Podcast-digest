@@ -477,10 +477,10 @@ def analyze_audio_gemini(audio_path: Path, episode: dict) -> Optional[dict]:
                         continue
                 log.warning(f"  ❌ Gemini audio ({model_name}): {err}")
                 break
-        if result:
+                if result:
             break
 
-            try:
+    try:
         client.files.delete(name=uploaded.name)
         log.info("🗑️  已清理 Gemini Files API 暫存檔")
     except Exception:
