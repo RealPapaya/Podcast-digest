@@ -261,8 +261,8 @@ def _render_sector_card(sector: dict) -> str:
         </div>
         <div><span style='font-size:12px;color:#9ca3af;'>🏭 族群分析</span></div>
       </div>
-      {stock_table}
-            <div style="font-size:14px;color:#374151;line-height:1.7;margin-top:12px;">{sector.get('description','')}</div>
+            {stock_table}
+      <div style="font-size:14px;color:#374151;line-height:1.7;margin-top:12px;">{sector.get('description','')}</div>
       
       <!-- 動態 insights 欄位 -->
       {"".join([
