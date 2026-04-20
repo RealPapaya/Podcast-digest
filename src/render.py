@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 render.py
 將 digest dict 渲染成精美 HTML Email（對標截圖設計）
@@ -94,21 +94,30 @@ def _render_stock_card(stock: dict) -> str:
         else:
             change_cell = "—"
         
-        # 評級（根據RSI和1M%）
+                # 評級（根據RSI和1M%，5種評級）
         rating = "—"
         if rsi and change_1m is not None:
-            if rsi < 30 and change_1m < 0:
+            # 超賣區（RSI < 30 且跌幅大）
+            if rsi < 30 and change_1m < -5:
                 rating = "⭐超賣"
+            # 強勢股（漲幅 > 30%）
+            elif change_1m > 30:
+                rating = "🚀爆發"
+            # 熱門股（RSI > 70 且漲幅 > 10%）
             elif rsi > 70 and change_1m > 10:
                 rating = "🔥熱門"
-                        elif change_1m > 20:
-                rating = "🚀強勢"
+            # 穩健股（RSI 在 40-60 之間且小幅上漲）
+            elif 40 <= rsi <= 60 and 0 < change_1m <= 10:
+                rating = "✅穩健"
+            # 弱勢股（跌幅 > 10% 但 RSI 未超賣）
+            elif change_1m < -10 and rsi >= 30:
+                rating = "⚠️弱勢"
         
         price_row = f"""
         <div style="margin:10px 0;">
           <!-- 標題列 -->
           <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 1fr 1fr;gap:12px;padding:6px 14px;font-size:11px;color:#9ca3af;">
-            <div>主題／標的觀點</div>
+            <div>代號</div>
             <div style="text-align:right;">現價</div>
             <div style="text-align:center;">P/E</div>
             <div style="text-align:center;">RSI</div>
@@ -142,9 +151,127 @@ def _render_stock_card(stock: dict) -> str:
         <div>{label}</div>
       </div>
       {price_row}
-      <div style="font-size:14px;color:#374151;line-height:1.7;margin-top:10px;">{stock.get('description','')}</div>
-      {"<div style='font-size:13px;margin-top:8px;'><span style='color:#2563eb;font-weight:600;'>催化劑：</span><span style='color:#374151;'>" + stock.get('catalyst','') + "</span></div>" if stock.get('catalyst') else ""}
-      {"<div style='font-size:13px;margin-top:4px;'><span style='color:#dc2626;font-weight:600;'>風險點：</span><span style='color:#374151;'>" + stock.get('key_risk','') + "</span></div>" if stock.get('key_risk') else ""}
+            <div style="font-size:14px;color:#374151;line-height:1.7;margin-top:12px;">{stock.get('description','')}</div>
+      
+      <!-- 動態 insights 欄位 -->
+      {"".join([
+        f"<div style='margin-top:{6 if i == 0 else 4}px;font-size:13px;'>" +
+        f"<span style='color:#2563eb;font-weight:600;'>{insight.get('label','')}：</span>" +
+        f"<span style='color:#374151;'>{insight.get('content','')}</span>" +
+        "</div>"
+        for i, insight in enumerate(stock.get('insights', []))
+      ]) if stock.get('insights') else ""}
+    </div>
+    """
+
+
+
+
+def _render_sector_card(sector: dict) -> str:
+    """
+    Render a sector analysis card with multiple related stocks table
+    """
+    stance = sector.get("stance", "觀望")
+    s_cfg = STANCE_CONFIG.get(stance, STANCE_CONFIG["觀望"])
+    src = sector.get("source_time", "")
+    sector_name = sector.get("sector_name", "")
+    related_stocks = sector.get("related_stocks", [])
+    
+    # 建立族群股票表格
+    stock_table = ""
+    if related_stocks:
+        # 獲取股價資料
+        stock_rows = ""
+        for stock in related_stocks:
+            ticker = stock.get("ticker", "")
+            name = stock.get("name", "")
+            exchange = stock.get("exchange", "台股")
+            
+            # 如果有 market_data，顯示完整資訊
+            market_data = stock.get("market_data", {})
+            if market_data and not market_data.get("error"):
+                price = market_data.get("price")
+                pe = market_data.get("pe")
+                rsi = market_data.get("rsi")
+                change_1m = market_data.get("change_1m")
+                
+                ticker_cell = f"{name}({ticker})"
+                price_cell = f"${price:,.2f}" if price else "—"
+                pe_cell = f"{pe:.1f}" if pe else "—"
+                rsi_cell = f"{rsi:.1f}" if rsi else "—"
+                change_cell = f"+{change_1m:.1f}%" if change_1m and change_1m > 0 else f"{change_1m:.1f}%" if change_1m else "—"
+                
+                # 評級（5種評級）
+                rating = "—"
+                if rsi and change_1m is not None:
+                    if rsi < 30 and change_1m < -5:
+                        rating = "⭐超賣"
+                    elif change_1m > 30:
+                        rating = "🚀爆發"
+                    elif rsi > 70 and change_1m > 10:
+                        rating = "🔥熱門"
+                    elif 40 <= rsi <= 60 and 0 < change_1m <= 10:
+                        rating = "✅穩健"
+                    elif change_1m < -10 and rsi >= 30:
+                        rating = "⚠️弱勢"
+                
+                stock_rows += f"""
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 1fr 1fr;gap:12px;padding:10px 14px;background:#f9fafb;border-radius:6px;font-size:13px;color:#6b7280;margin-bottom:8px;">
+            <div style="font-weight:600;color:#374151;">{ticker_cell}</div>
+            <div style="text-align:right;font-weight:600;color:#111827;">{price_cell}</div>
+            <div style="text-align:center;">{pe_cell}</div>
+            <div style="text-align:center;">{rsi_cell}</div>
+            <div style="text-align:center;">{change_cell}</div>
+            <div style="text-align:center;">{rating}</div>
+          </div>"""
+            else:
+                # 沒有股價資料，只顯示名稱和代碼
+                stock_rows += f"""
+          <div style="padding:8px 14px;background:#f9fafb;border-radius:6px;font-size:13px;color:#6b7280;margin-bottom:8px;">
+            <span style="font-weight:600;color:#374151;">{name}({ticker})</span>
+          </div>"""
+        
+        stock_table = f"""
+        <div style="margin:10px 0;">
+          <!-- 表格標題 -->
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 1fr 1fr;gap:12px;padding:6px 14px;font-size:11px;color:#9ca3af;">
+            <div>相關個股</div>
+            <div style="text-align:right;">現價</div>
+            <div style="text-align:center;">P/E</div>
+            <div style="text-align:center;">RSI</div>
+            <div style="text-align:center;">1M%</div>
+            <div style="text-align:center;">評級</div>
+          </div>
+          <!-- 股票數據列 -->
+          {stock_rows}
+        </div>
+        """
+    
+    return f"""
+    <div style="border:1px solid #e5e7eb;border-left:4px solid {s_cfg['border']};border-radius:0 10px 10px 0;
+                padding:18px 20px;margin-bottom:14px;background:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:4px;">
+            {_stance_dot(stance)}
+            <span style="font-size:16px;font-weight:700;color:#111827;">{sector_name}</span>
+            <span style="display:inline-block;padding:2px 6px;background:{s_cfg['bg']};color:{s_cfg['dot']};border-radius:3px;font-size:11px;font-weight:600;">{stance}</span>
+            {"<span style='font-size:11px;color:#9ca3af;'>來源 " + src + "</span>" if src else ""}
+          </div>
+        </div>
+        <div><span style='font-size:12px;color:#9ca3af;'>🏭 族群分析</span></div>
+      </div>
+      {stock_table}
+            <div style="font-size:14px;color:#374151;line-height:1.7;margin-top:12px;">{sector.get('description','')}</div>
+      
+      <!-- 動態 insights 欄位 -->
+      {"".join([
+        f"<div style='margin-top:{10 if i == 0 else 6}px;font-size:13px;'>" +
+        f"<span style='color:#2563eb;font-weight:600;'>{insight.get('label','')}：</span>" +
+        f"<span style='color:#374151;'>{insight.get('content','')}</span>" +
+        "</div>"
+        for i, insight in enumerate(sector.get('insights', []))
+      ]) if sector.get('insights') else ""}
     </div>
     """
 
@@ -156,73 +283,78 @@ def render_email_html(digest: dict) -> str:
     market = digest.get("market_outlook", {})
     news_list = digest.get("news", [])
     stocks = digest.get("stocks", [])
+    sector_analysis = digest.get("sector_analysis", [])
     qa_list = digest.get("qa", [])
 
     market_stance = market.get("stance", "中性")
     market_cfg = STANCE_CONFIG.get(market_stance, STANCE_CONFIG["中性"])
 
-    # ── 新聞區塊 ─────────────────────────────────────────────────
+        # ── 新聞區塊 ─────────────────────────────────────────────────
     news_html = ""
     for item in news_list:
         cat = item.get("category", "其他")
         cat_cfg = CATEGORY_CONFIG.get(cat, CATEGORY_CONFIG["其他"])
         src = item.get("source_time", "")
         news_html += f"""
-        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:18px 20px;margin-bottom:14px;background:#fff;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
-            <div style="font-size:16px;font-weight:700;color:#111827;flex:1;">{item.get('title','')}</div>
-            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;margin-left:12px;">
-              {_badge('★ ' + cat, cat_cfg['color'], cat_cfg['bg'])}
-            </div>
+        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:20px;margin-bottom:14px;background:#fff;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <h3 style="font-size:16px;font-weight:700;color:#111827;margin:0;flex:1;">{item.get('title','')}</h3>
+            <span style="display:inline-block;padding:4px 10px;background:{cat_cfg['bg']};color:{cat_cfg['color']};border-radius:4px;font-size:12px;font-weight:600;margin-left:12px;white-space:nowrap;">★ {cat}</span>
           </div>
-          {"<div style='font-size:12px;color:#9ca3af;margin-bottom:8px;'>來源：" + src + "</div>" if src else ""}
-          <div style="margin-bottom:8px;">
-            <span style="color:#2563eb;font-weight:600;font-size:13px;">事件：</span>
-            <span style="color:#374151;font-size:14px;">{item.get('event','')}</span>
+          {"<div style='font-size:12px;color:#9ca3af;margin-bottom:12px;'>來源：" + src + "</div>" if src else ""}
+          <div style="margin-bottom:10px;">
+            <span style="color:#2563eb;font-weight:600;font-size:14px;">事件：</span>
+            <span style="color:#374151;font-size:14px;line-height:1.6;">{item.get('event','')}</span>
           </div>
           <div>
-            <span style="color:#16a34a;font-weight:600;font-size:13px;">觀點：</span>
-            <span style="color:#374151;font-size:14px;">{item.get('perspective','')}</span>
+            <span style="color:#16a34a;font-weight:600;font-size:14px;">觀點：</span>
+            <span style="color:#374151;font-size:14px;line-height:1.6;">{item.get('perspective','')}</span>
           </div>
         </div>
         """
 
-    # ── 個股區塊 ─────────────────────────────────────────────────
-        stocks_html = ""
+        # ── 個股區塊 ─────────────────────────────────────────────────
+    stocks_html = ""
     for stock in stocks:
         stocks_html += _render_stock_card(stock)
 
-    # ── Q&A 區塊 ─────────────────────────────────────────────────
+
+        # ── 族群分析區塊 ──────────────────────────────────────────────
+    sectors_html = ""
+    for sector in sector_analysis:
+        sectors_html += _render_sector_card(sector)
+
+        # ── Q&A 區塊 ─────────────────────────────────────────────────
     qa_html = ""
     for i, qa in enumerate(qa_list):
         points_html = ""
         for pt in qa.get("points", []):
             points_html += f"""
-            <div style="margin-bottom:8px;">
-              <span style="color:#7c3aed;font-weight:600;font-size:13px;">{pt.get('label','')}：</span>
-              <span style="color:#374151;font-size:14px;">{pt.get('content','')}</span>
+            <div style="margin-bottom:10px;">
+              <span style="color:#7c3aed;font-weight:600;font-size:14px;">{pt.get('label','')}：</span>
+              <span style="color:#374151;font-size:14px;line-height:1.6;">{pt.get('content','')}</span>
             </div>
             """
         quote = qa.get("quote", "")
         quote_html = ""
         if quote:
             quote_html = f"""
-            <div style="margin-top:14px;padding:12px 16px;background:#fefce8;border-radius:8px;">
+            <div style="margin-top:14px;padding:14px 18px;background:#fefce8;border-left:3px solid #eab308;border-radius:0 8px 8px 0;">
               <span style="font-size:18px;margin-right:8px;">💡</span>
-              <span style="font-size:13px;color:#92400e;font-style:italic;">{quote}</span>
-                        </div>
+              <span style="font-size:13px;color:#854d0e;font-style:italic;line-height:1.6;">{quote}</span>
+            </div>
             """
         src = qa.get("source_time", "")
         src_badge = f"<span style='font-size:11px;color:#9ca3af;background:#f3f4f6;padding:3px 8px;border-radius:12px;'>⏱️ {src}分</span>" if src else ""
         qa_html += f"""
-        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:18px 20px;margin-bottom:14px;background:#fff;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <div style="font-size:15px;font-weight:700;color:#111827;flex:1;">{qa.get('title','')}</div>
+        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:20px;margin-bottom:16px;background:#fff;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <h3 style="font-size:16px;font-weight:700;color:#111827;margin:0;flex:1;">{qa.get('title','')}</h3>
             {src_badge}
           </div>
-          <div style="background:#f0f0ff;border-left:3px solid #6366f1;padding:10px 14px;border-radius:0 6px 6px 0;margin-bottom:14px;">
-            <span style="font-weight:600;color:#4f46e5;">Q：</span>
-            <span style="color:#374151;font-size:14px;">{qa.get('question','')}</span>
+          <div style="background:#f3e8ff;border-left:3px solid #a855f7;padding:12px 16px;border-radius:0 6px 6px 0;margin-bottom:14px;">
+            <span style="font-weight:600;color:#7c3aed;font-size:14px;">Q：</span>
+            <span style="color:#374151;font-size:14px;line-height:1.6;">{qa.get('question','')}</span>
           </div>
           {points_html}
           {quote_html}
@@ -280,6 +412,7 @@ def render_email_html(digest: dict) -> str:
       主題／標的觀點
     </div>
     {stocks_html}
+    {sectors_html}
   </div>
 
   <!-- Q&A -->
