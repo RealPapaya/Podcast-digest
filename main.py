@@ -95,10 +95,10 @@ def main():
         audio_path.unlink(missing_ok=True)
         sys.exit(1)
     
-    log.info("✅ AI 分析完成")
+        log.info("✅ AI 分析完成")
 
     # ── 6. 獲取股價數據 ──────────────────────────────────────────
-        log.info("📊 獲取股價數據 (Price, P/E, RSI, 1M%)...")
+    log.info("📊 獲取股價數據 (Price, P/E, RSI, 1M%)...")
     
     # Individual stocks
     stocks = digest.get("stocks", [])

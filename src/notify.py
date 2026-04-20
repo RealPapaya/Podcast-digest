@@ -325,13 +325,13 @@ def send_line_message(digest: dict) -> bool:
     summary_card = _build_line_summary_card(digest)
     stocks_card = _build_line_stocks_card(digest)
 
-    payload = {
+        payload = {
         "to": user_id,
         "messages": [summary_card, stocks_card],  # 發送兩則訊息
     }
 
-        try:
-                log.info(f"📡 準備發送 LINE 訊息（共 2 則）至 {user_id[:10]}...")
+    try:
+        log.info(f"📡 準備發送 LINE 訊息（共 2 則）至 {user_id[:10]}...")
         log.debug(f"LINE Token (first 20 chars): {token[:20]}...")
         payload_size = len(json.dumps(payload, ensure_ascii=False))
         log.debug(f"Total payload size: {payload_size:,} bytes")
@@ -346,11 +346,11 @@ def send_line_message(digest: dict) -> bool:
             },
             json=payload,
             timeout=15,
-        )
+                )
         
         log.info(f"🔍 LINE API Response Status: {resp.status_code}")
 
-                if resp.status_code == 200:
+        if resp.status_code == 200:
             log.info("✅ LINE 訊息發送成功（共 2 則）")
             return True
         elif resp.status_code == 401:

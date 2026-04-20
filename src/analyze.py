@@ -480,13 +480,13 @@ def analyze_audio_gemini(audio_path: Path, episode: dict) -> Optional[dict]:
         if result:
             break
 
-    try:
+        try:
         client.files.delete(name=uploaded.name)
         log.info("🗑️  已清理 Gemini Files API 暫存檔")
     except Exception:
         pass
 
-        if result:
+    if result:
         # Fill missing episode info (in case AI didn't include them)
         result.setdefault("ep_number", episode.get("ep_number", ""))
         result.setdefault("date", episode.get("date", ""))
