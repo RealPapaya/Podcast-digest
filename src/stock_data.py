@@ -34,14 +34,45 @@ def _calculate_rsi(prices: pd.Series, period: int = 14) -> Optional[float]:
     return round(rsi.iloc[-1], 2) if not pd.isna(rsi.iloc[-1]) else None
 
 
+def _format_ticker(ticker: str, exchange: str) -> tuple:
+    """
+    Convert ticker + exchange to yfinance symbol(s).
+    Returns (primary, fallback_or_None).
+    """
+    t = ticker.strip().upper()
+
+    if exchange in ("台股", "上市"):
+        return f"{t}.TW", f"{t}.TWO"
+    elif exchange == "上櫃":
+        return f"{t}.TWO", f"{t}.TW"
+    elif exchange == "興櫃":
+        return f"{t}.TWO", None
+    elif exchange == "美股":
+        return t, None
+    elif exchange == "日股":
+        return f"{t}.T", None
+    elif exchange == "港股":
+        # Zero-pad to 4 digits (e.g. 700 → 0700.HK)
+        return f"{t.zfill(4)}.HK", None
+    elif exchange == "ETF":
+        # Try as-is first (US ETF like VOO), then .TW (台灣 ETF like 0050)
+        if t.isdigit():
+            return f"{t}.TW", f"{t}.TWO"
+        return t, f"{t}.TW"
+    else:
+        # Unknown exchange — try as-is, log a warning
+        log.warning(f"未知交易所 '{exchange}'，嘗試直接使用 {t}")
+        return t, f"{t}.TW"
+
+
 def get_stock_metrics(ticker: str, exchange: str = "台股") -> Dict:
     """
     Get stock metrics: current price, P/E, RSI, 1M%
-    
+
     Args:
-        ticker: Stock ticker symbol (e.g., "2330", "AAPL")
-        exchange: "台股" or "美股"
-    
+        ticker: Stock ticker symbol (e.g., "2330", "AAPL", "7203", "700")
+        exchange: 台股 | 上櫃 | 興櫃 | 美股 | 日股 | 港股 | ETF
+
     Returns:
         Dict with keys: price, pe, rsi, change_1m, error
     """
@@ -52,18 +83,8 @@ def get_stock_metrics(ticker: str, exchange: str = "台股") -> Dict:
         "change_1m": None,
         "error": None
     }
-    
-    # Format ticker for yfinance
-    if exchange == "台股":
-        yf_ticker = f"{ticker}.TW"
-        # Also try .TWO for OTC stocks if .TW fails
-        fallback_ticker = f"{ticker}.TWO"
-    elif exchange == "美股":
-        yf_ticker = ticker
-        fallback_ticker = None
-    else:
-        result["error"] = f"Unknown exchange: {exchange}"
-        return result
+
+    yf_ticker, fallback_ticker = _format_ticker(ticker, exchange)
     
     def _try_fetch_ticker(ticker_symbol: str) -> bool:
         """Try to fetch data for a ticker symbol. Returns True if successful."""

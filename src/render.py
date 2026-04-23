@@ -115,24 +115,24 @@ def _render_stock_card(stock: dict) -> str:
         
         price_row = f"""
         <div style="margin:10px 0;">
-          <!-- 標題列 -->
-          <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 1fr 1fr;gap:12px;padding:6px 14px;font-size:11px;color:#9ca3af;">
-            <div>代號</div>
-            <div style="text-align:right;">現價</div>
-            <div style="text-align:center;">P/E</div>
-            <div style="text-align:center;">RSI</div>
-            <div style="text-align:center;">1M%</div>
-            <div style="text-align:center;">評級</div>
-          </div>
-          <!-- 數據列 -->
-          <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 1fr 1fr;gap:12px;padding:10px 14px;background:#f9fafb;border-radius:6px;font-size:13px;color:#6b7280;">
-            <div style="font-weight:600;color:#374151;">{ticker_cell}</div>
-            <div style="text-align:right;font-weight:600;color:#111827;">{price_cell}</div>
-            <div style="text-align:center;">{pe_cell}</div>
-            <div style="text-align:center;">{rsi_cell}</div>
-            <div style="text-align:center;">{change_cell}</div>
-            <div style="text-align:center;">{rating}</div>
-          </div>
+          <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+            <tr>
+              <td style="padding:6px 8px 6px 14px;font-size:11px;color:#9ca3af;width:34%;">代號</td>
+              <td style="padding:6px 8px;font-size:11px;color:#9ca3af;text-align:right;width:18%;">現價</td>
+              <td style="padding:6px 8px;font-size:11px;color:#9ca3af;text-align:center;width:12%;">P/E</td>
+              <td style="padding:6px 8px;font-size:11px;color:#9ca3af;text-align:center;width:12%;">RSI</td>
+              <td style="padding:6px 8px;font-size:11px;color:#9ca3af;text-align:center;width:12%;">1M%</td>
+              <td style="padding:6px 14px 6px 8px;font-size:11px;color:#9ca3af;text-align:center;width:12%;">評級</td>
+            </tr>
+            <tr style="background:#f9fafb;">
+              <td style="padding:10px 8px 10px 14px;font-size:13px;font-weight:600;color:#374151;border-radius:6px 0 0 6px;">{ticker_cell}</td>
+              <td style="padding:10px 8px;font-size:13px;font-weight:600;color:#111827;text-align:right;">{price_cell}</td>
+              <td style="padding:10px 8px;font-size:13px;color:#6b7280;text-align:center;">{pe_cell}</td>
+              <td style="padding:10px 8px;font-size:13px;color:#6b7280;text-align:center;">{rsi_cell}</td>
+              <td style="padding:10px 8px;font-size:13px;color:#6b7280;text-align:center;">{change_cell}</td>
+              <td style="padding:10px 14px 10px 8px;font-size:13px;color:#6b7280;text-align:center;border-radius:0 6px 6px 0;">{rating}</td>
+            </tr>
+          </table>
         </div>
         """
 
@@ -216,14 +216,15 @@ def _render_sector_card(sector: dict) -> str:
                         rating = "⚠️弱勢"
                 
                 stock_rows += f"""
-          <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 1fr 1fr;gap:12px;padding:10px 14px;background:#f9fafb;border-radius:6px;font-size:13px;color:#6b7280;margin-bottom:8px;">
-            <div style="font-weight:600;color:#374151;">{ticker_cell}</div>
-            <div style="text-align:right;font-weight:600;color:#111827;">{price_cell}</div>
-            <div style="text-align:center;">{pe_cell}</div>
-            <div style="text-align:center;">{rsi_cell}</div>
-            <div style="text-align:center;">{change_cell}</div>
-            <div style="text-align:center;">{rating}</div>
-          </div>"""
+          <tr style="background:#f9fafb;">
+            <td style="padding:10px 8px 10px 14px;font-size:13px;font-weight:600;color:#374151;border-radius:6px 0 0 6px;">{ticker_cell}</td>
+            <td style="padding:10px 8px;font-size:13px;font-weight:600;color:#111827;text-align:right;">{price_cell}</td>
+            <td style="padding:10px 8px;font-size:13px;color:#6b7280;text-align:center;">{pe_cell}</td>
+            <td style="padding:10px 8px;font-size:13px;color:#6b7280;text-align:center;">{rsi_cell}</td>
+            <td style="padding:10px 8px;font-size:13px;color:#6b7280;text-align:center;">{change_cell}</td>
+            <td style="padding:10px 14px 10px 8px;font-size:13px;color:#6b7280;text-align:center;border-radius:0 6px 6px 0;">{rating}</td>
+          </tr>
+          <tr><td colspan="6" style="padding:4px 0;"></td></tr>"""
             else:
                 # 沒有股價資料，只顯示名稱和代碼
                 stock_rows += f"""
@@ -233,17 +234,17 @@ def _render_sector_card(sector: dict) -> str:
         
         stock_table = f"""
         <div style="margin:10px 0;">
-          <!-- 表格標題 -->
-          <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 1fr 1fr;gap:12px;padding:6px 14px;font-size:11px;color:#9ca3af;">
-            <div>相關個股</div>
-            <div style="text-align:right;">現價</div>
-            <div style="text-align:center;">P/E</div>
-            <div style="text-align:center;">RSI</div>
-            <div style="text-align:center;">1M%</div>
-            <div style="text-align:center;">評級</div>
-          </div>
-          <!-- 股票數據列 -->
-          {stock_rows}
+          <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+            <tr>
+              <td style="padding:6px 8px 6px 14px;font-size:11px;color:#9ca3af;width:34%;">相關個股</td>
+              <td style="padding:6px 8px;font-size:11px;color:#9ca3af;text-align:right;width:18%;">現價</td>
+              <td style="padding:6px 8px;font-size:11px;color:#9ca3af;text-align:center;width:12%;">P/E</td>
+              <td style="padding:6px 8px;font-size:11px;color:#9ca3af;text-align:center;width:12%;">RSI</td>
+              <td style="padding:6px 8px;font-size:11px;color:#9ca3af;text-align:center;width:12%;">1M%</td>
+              <td style="padding:6px 14px 6px 8px;font-size:11px;color:#9ca3af;text-align:center;width:12%;">評級</td>
+            </tr>
+            {stock_rows}
+          </table>
         </div>
         """
     
